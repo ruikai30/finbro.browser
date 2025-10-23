@@ -1,0 +1,348 @@
+/**
+ * Finbro Browser - Toolbar Styles
+ * Brand Colors: Purple (#290E99), Grey (#848484), Light Grey (#D8D8D8), Black, White
+ */
+
+:root {
+  --finbro-black: #000000;
+  --finbro-white: #FFFFFF;
+  --finbro-purple: #290E99;
+  --finbro-grey: #848484;
+  --finbro-light-grey: #D8D8D8;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  overflow: hidden;
+  background: var(--finbro-light-grey);
+}
+
+/* Main Toolbar Container */
+.toolbar {
+  height: 100px; /* Increased to fit tab bar + controls */
+  background: var(--finbro-white);
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  color: var(--finbro-black);
+}
+
+/* Tab Bar */
+.tab-bar {
+  height: 40px;
+  background: var(--finbro-light-grey);
+  display: flex;
+  align-items: flex-end;
+  padding: 0 8px;
+  gap: 2px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  flex-shrink: 0;
+}
+
+.tab-bar::-webkit-scrollbar {
+  height: 3px;
+}
+
+.tab-bar::-webkit-scrollbar-thumb {
+  background: var(--finbro-grey);
+  border-radius: 3px;
+}
+
+/* Individual Tab */
+.tab {
+  min-width: 180px;
+  max-width: 240px;
+  height: 36px;
+  background: #a0a0a0;
+  border-radius: 8px 8px 0 0;
+  display: flex;
+  align-items: center;
+  padding: 0 12px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  position: relative;
+  color: var(--finbro-white);
+  font-size: 13px;
+  user-select: none;
+  flex-shrink: 0;
+  border: 1px solid #888;
+  border-bottom: none;
+}
+
+.tab:hover {
+  background: #b0b0b0;
+}
+
+.tab.active {
+  background: var(--finbro-white);
+  color: var(--finbro-black);
+  height: 40px;
+  box-shadow: 0 -2px 4px rgba(0, 0, 0, 0.05);
+  border: 1px solid var(--finbro-light-grey);
+  border-bottom: 1px solid var(--finbro-white);
+  z-index: 10;
+}
+
+.tab-favicon {
+  width: 16px;
+  height: 16px;
+  margin-right: 8px;
+  flex-shrink: 0;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.tab-title {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 500;
+  line-height: 1.2;
+  min-width: 0;
+}
+
+.tab.active .tab-title {
+  font-weight: 600;
+  color: var(--finbro-black);
+}
+
+.tab-close {
+  width: 20px;
+  height: 20px;
+  margin-left: 8px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: all 0.15s ease;
+  font-size: 14px;
+  font-weight: bold;
+  line-height: 1;
+}
+
+.tab:hover .tab-close {
+  opacity: 0.6;
+}
+
+.tab-close:hover {
+  background: rgba(0, 0, 0, 0.2);
+  opacity: 1 !important;
+}
+
+.tab.active .tab-close:hover {
+  background: var(--finbro-light-grey);
+}
+
+/* New Tab Button */
+.new-tab-btn {
+  width: 32px;
+  height: 32px;
+  background: transparent;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--finbro-grey);
+  font-size: 24px;
+  transition: all 0.15s ease;
+  margin-left: 8px;
+  margin-bottom: 4px;
+  flex-shrink: 0;
+  font-weight: 300;
+}
+
+.new-tab-btn:hover {
+  background: rgba(0, 0, 0, 0.08);
+  color: var(--finbro-black);
+}
+
+/* Controls Bar */
+.controls-bar {
+  height: 60px;
+  background: var(--finbro-white);
+  display: flex;
+  align-items: center;
+  padding: 0 20px;
+  justify-content: space-between;
+  border-top: 1px solid var(--finbro-light-grey);
+}
+
+.controls-left {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+}
+
+.controls-center {
+  flex: 1 1 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+}
+
+.controls-right {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+}
+
+.toolbar-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--finbro-purple);
+  letter-spacing: 0.5px;
+}
+
+/* Buttons */
+.btn {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.btn:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none !important;
+}
+
+.btn-primary {
+  background: var(--finbro-purple);
+  color: var(--finbro-white);
+}
+
+.btn-primary:hover {
+  background: #1f0a7a;
+}
+
+.btn-secondary {
+  background: var(--finbro-light-grey);
+  color: var(--finbro-black);
+}
+
+.btn-secondary:hover {
+  background: #c0c0c0;
+}
+
+.btn-icon {
+  font-size: 16px;
+  line-height: 1;
+}
+
+/* Status Display */
+.status {
+  padding: 8px 16px;
+  background: var(--finbro-light-grey);
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  min-width: 120px;
+  text-align: center;
+  white-space: nowrap;
+  color: var(--finbro-grey);
+}
+
+.status.loading {
+  background: var(--finbro-purple);
+  color: var(--finbro-white);
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+.status.success {
+  background: #10b981;
+  color: var(--finbro-white);
+}
+
+.status.error {
+  background: #ef4444;
+  color: var(--finbro-white);
+}
+
+/* Animations */
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+/* Loading state */
+.btn.loading {
+  pointer-events: none;
+}
+
+.btn.loading .btn-icon {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .toolbar {
+    height: 90px;
+  }
+  
+  .controls-bar {
+    padding: 0 12px;
+  }
+  
+  .toolbar-title {
+    font-size: 14px;
+  }
+  
+  .btn {
+    padding: 8px 14px;
+    font-size: 13px;
+  }
+  
+  .controls-center {
+    gap: 8px;
+  }
+  
+  .tab {
+    min-width: 140px;
+  }
+}

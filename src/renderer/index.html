@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'">
+  <title>Finbro Browser</title>
+  <link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+  <!-- Toolbar Container -->
+  <header class="toolbar">
+    <!-- Tab Bar (Chrome-style tabs) -->
+    <div class="tab-bar" id="tab-bar">
+      <!-- Tabs will be dynamically added here -->
+    </div>
+    
+    <!-- Controls Bar -->
+    <div class="controls-bar">
+      <div class="controls-left">
+        <h1 class="toolbar-title">FINBRO</h1>
+      </div>
+      
+      <div class="controls-center">
+        <button id="btn-autofill" class="btn btn-primary" title="Autofill current form">
+          <span class="btn-icon">📝</span>
+          Autofill
+        </button>
+        
+        <button id="btn-sync" class="btn btn-secondary" title="Sync profile from API">
+          <span class="btn-icon">🔄</span>
+          Sync Profile
+        </button>
+        
+        <button id="btn-demo-google" class="btn btn-secondary" title="Demo: Search 'hello' on Google">
+          <span class="btn-icon">🔍</span>
+          Demo Search
+        </button>
+      </div>
+      
+      <div class="controls-right">
+        <span id="status" class="status">Ready</span>
+      </div>
+    </div>
+  </header>
+  
+  <!-- Tab content renders below via BrowserViews -->
+  
+  <script src="./index.js"></script>
+</body>
+</html>
