@@ -31,15 +31,7 @@
     "isolatedModules": true,
 
     /* Completeness */
-    "skipLibCheck": true,
-
-    /* Path Mapping */
-    "baseUrl": ".",
-    "paths": {
-      "@main/*": ["src/main/*"],
-      "@renderer/*": ["src/renderer/*"],
-      "@types/*": ["src/types/*"]
-    }
+    "skipLibCheck": true
   },
   "include": [
     "src/**/*"
@@ -47,8 +39,6 @@
   "exclude": [
     "node_modules",
     "dist",
-    "release",
-    "**/*.spec.ts"
+    "release"
   ]
 }
-

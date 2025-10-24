@@ -1,11 +1,8 @@
 /**
  * Renderer Process
- * 
- * Toolbar UI logic, tab management, and IPC communication.
- * Runs in the browser context (sandboxed).
+ * Ultra-lean: Only tab rendering and bridge connection control
  */
 
-// Extend Window interface for TypeScript
 declare global {
   interface Window {
     Finbro: {
@@ -16,17 +13,6 @@ declare global {
         getCurrent: () => Promise<number>;
         getAll: () => Promise<{ tabs: any[]; currentTabId: number }>;
       };
-      autofill: {
-        execute: (profile: any, tabId?: number) => Promise<{
-          success: boolean;
-          fieldsFilled: number;
-          errors?: string[];
-        }>;
-      };
-      api: {
-        syncProfile: () => Promise<{ profile: any }>;
-        syncTargets: () => Promise<{ targets: any[] }>;
-      };
       config: {
         get: () => Promise<{ config: any }>;
         set: (config: any) => Promise<void>;
@@ -35,44 +21,75 @@ declare global {
         execute: (call: any) => Promise<any>;
         getAll: () => Promise<{ tools: any[] }>;
       };
+      bridge: {
+        connect: () => Promise<void>;
+        disconnect: () => Promise<void>;
+        status: () => Promise<{ state: string }>;
+      };
     };
   }
 }
 
 // DOM Elements
-const btnAutofill = document.getElementById('btn-autofill') as HTMLButtonElement;
-const btnSync = document.getElementById('btn-sync') as HTMLButtonElement;
-const btnDemoGoogle = document.getElementById('btn-demo-google') as HTMLButtonElement;
-const statusEl = document.getElementById('status') as HTMLSpanElement;
+const btnBridge = document.getElementById('btn-bridge') as HTMLButtonElement;
+const bridgeStatus = document.getElementById('bridge-status') as HTMLSpanElement;
 const tabBar = document.getElementById('tab-bar') as HTMLDivElement;
 
 // State
-let cachedProfile: any = null;
 let currentTabId: number = -1;
 let tabs: Array<{ id: number; url: string; title?: string }> = [];
+let connectionState: string = 'disconnected';
 
 /**
- * Update status display
+ * Update bridge button based on connection state
  */
-function setStatus(message: string, type: 'idle' | 'loading' | 'success' | 'error' = 'idle'): void {
-  statusEl.textContent = message;
-  statusEl.className = 'status';
+function updateBridgeButton(state: string): void {
+  connectionState = state;
   
-  if (type !== 'idle') {
-    statusEl.classList.add(type);
+  switch (state) {
+    case 'connected':
+      bridgeStatus.textContent = 'Connected ✅';
+      btnBridge.className = 'btn btn-bridge connected';
+      break;
+    case 'connecting':
+      bridgeStatus.textContent = 'Connecting...';
+      btnBridge.className = 'btn btn-bridge connecting';
+      break;
+    case 'error':
+      bridgeStatus.textContent = 'Error ❌';
+      btnBridge.className = 'btn btn-bridge error';
+      break;
+    case 'disconnected':
+    default:
+      bridgeStatus.textContent = 'Disconnected';
+      btnBridge.className = 'btn btn-bridge disconnected';
+      break;
   }
 }
 
 /**
- * Set button loading state
+ * Handle bridge button click (toggle connect/disconnect)
  */
-function setButtonLoading(button: HTMLButtonElement, loading: boolean): void {
-  button.disabled = loading;
-  
-  if (loading) {
-    button.classList.add('loading');
-  } else {
-    button.classList.remove('loading');
+async function handleBridgeToggle(): Promise<void> {
+  try {
+    if (connectionState === 'connected') {
+      // Disconnect
+      await window.Finbro.bridge.disconnect();
+      updateBridgeButton('disconnected');
+    } else {
+      // Connect
+      updateBridgeButton('connecting');
+      await window.Finbro.bridge.connect();
+      
+      // Poll for status
+      setTimeout(async () => {
+        const { state } = await window.Finbro.bridge.status();
+        updateBridgeButton(state);
+      }, 500);
+    }
+  } catch (error) {
+    console.error('[Renderer] Bridge toggle failed:', error);
+    updateBridgeButton('error');
   }
 }
 
@@ -84,12 +101,12 @@ function getFaviconForUrl(url: string): string {
     const urlObj = new URL(url);
     const hostname = urlObj.hostname;
     
-    // Custom favicons for known sites
     if (hostname.includes('finbro')) return '🚀';
     if (hostname.includes('gmail') || hostname.includes('mail.google')) return '📧';
     if (hostname.includes('google')) return '🔍';
     if (hostname.includes('github')) return '💻';
     if (hostname.includes('greenhouse')) return '💼';
+    if (hostname.includes('example')) return '📄';
     
     return '🌐';
   } catch (e) {
@@ -107,12 +124,12 @@ function getTitleForUrl(url: string, savedTitle?: string): string {
     const urlObj = new URL(url);
     const hostname = urlObj.hostname;
     
-    // Custom titles for known sites
     if (hostname.includes('finbro')) return 'Finbro';
     if (hostname.includes('mail.google')) return 'Gmail';
     if (hostname.includes('google')) return 'Google';
     if (hostname.includes('github')) return 'GitHub';
     if (hostname.includes('greenhouse')) return 'Job Application';
+    if (hostname.includes('example')) return 'Example';
     
     return hostname.replace('www.', '');
   } catch (e) {
@@ -124,10 +141,8 @@ function getTitleForUrl(url: string, savedTitle?: string): string {
  * Render tabs in the tab bar
  */
 function renderTabs(): void {
-  // Clear tab bar
   tabBar.innerHTML = '';
   
-  // Render each tab
   for (const tab of tabs) {
     const tabEl = document.createElement('div');
     tabEl.className = 'tab';
@@ -159,7 +174,7 @@ function renderTabs(): void {
     });
     tabEl.appendChild(closeBtn);
     
-    // Click handler to switch tab
+    // Click to switch
     tabEl.addEventListener('click', () => {
       handleTabSwitch(tab.id);
     });
@@ -167,7 +182,7 @@ function renderTabs(): void {
     tabBar.appendChild(tabEl);
   }
   
-  // Add "New Tab" button
+  // New tab button
   const newTabBtn = document.createElement('button');
   newTabBtn.className = 'new-tab-btn';
   newTabBtn.textContent = '+';
@@ -177,7 +192,7 @@ function renderTabs(): void {
 }
 
 /**
- * Fetch and update tabs
+ * Update tabs from main process
  */
 async function updateTabs(): Promise<void> {
   try {
@@ -221,175 +236,60 @@ async function handleTabClose(tabId: number): Promise<void> {
  * Handle new tab
  */
 async function handleNewTab(): Promise<void> {
-  const url = prompt('🌐 Enter website URL to visit:', 'https://google.com');
-  
+  const url = prompt('🌐 Enter website URL:', 'https://google.com');
   if (!url) return;
   
-  // Add https:// if no protocol specified
   let fullUrl = url.trim();
   if (!fullUrl.startsWith('http://') && !fullUrl.startsWith('https://')) {
     fullUrl = 'https://' + fullUrl;
   }
   
-  setStatus('Opening new tab...', 'loading');
-  
   try {
     const result = await window.Finbro.tabs.create(fullUrl);
     await updateTabs();
     await handleTabSwitch(result.tabId);
-    
-    setStatus('Tab opened!', 'success');
-    setTimeout(() => setStatus('Ready', 'idle'), 2000);
   } catch (error) {
     console.error('[Renderer] Failed to create tab:', error);
-    setStatus('Failed to open tab!', 'error');
-    setTimeout(() => setStatus('Ready', 'idle'), 2000);
   }
 }
 
 /**
- * Sync Profile Handler
+ * Poll bridge status
  */
-async function handleSyncProfile(): Promise<void> {
-  setButtonLoading(btnSync, true);
-  setStatus('Syncing profile...', 'loading');
-  
+async function pollBridgeStatus(): Promise<void> {
   try {
-    const result = await window.Finbro.api.syncProfile();
-    cachedProfile = result.profile;
-    
-    setStatus(`Profile loaded: ${cachedProfile.email}`, 'success');
-    setTimeout(() => setStatus('Ready', 'idle'), 3000);
+    const { state } = await window.Finbro.bridge.status();
+    updateBridgeButton(state);
   } catch (error) {
-    console.error('[Renderer] Sync profile failed:', error);
-    setStatus('Sync failed!', 'error');
-    setTimeout(() => setStatus('Ready', 'idle'), 3000);
-  } finally {
-    setButtonLoading(btnSync, false);
+    // Silently fail
   }
-}
-
-/**
- * Autofill Handler
- */
-async function handleAutofill(): Promise<void> {
-  // Ensure we have profile data
-  if (!cachedProfile) {
-    await handleSyncProfile();
-    if (!cachedProfile) {
-      setStatus('No profile data!', 'error');
-      return;
-    }
-  }
-  
-  setButtonLoading(btnAutofill, true);
-  setStatus('Running autofill...', 'loading');
-  
-  try {
-    const result = await window.Finbro.autofill.execute(cachedProfile, currentTabId);
-    
-    if (result.success) {
-      setStatus(`Filled ${result.fieldsFilled} fields!`, 'success');
-    } else {
-      setStatus('Autofill failed!', 'error');
-    }
-    
-    setTimeout(() => setStatus('Ready', 'idle'), 3000);
-  } catch (error) {
-    console.error('[Renderer] Autofill failed:', error);
-    setStatus('Autofill error!', 'error');
-    setTimeout(() => setStatus('Ready', 'idle'), 3000);
-  } finally {
-    setButtonLoading(btnAutofill, false);
-  }
-}
-
-/**
- * Demo Google Search Handler
- */
-async function handleDemoGoogleSearch(): Promise<void> {
-  setButtonLoading(btnDemoGoogle, true);
-  setStatus('Running demo...', 'loading');
-  
-  try {
-    // Find Google/Gmail tab
-    const googleTab = tabs.find(t => 
-      t.url.includes('google.com') || t.url.includes('mail.google.com')
-    );
-    
-    if (!googleTab) {
-      setStatus('No Google tab found!', 'error');
-      setTimeout(() => setStatus('Ready', 'idle'), 3000);
-      return;
-    }
-    
-    // Switch to Google tab
-    await window.Finbro.tabs.switch(googleTab.id);
-    currentTabId = googleTab.id;
-    renderTabs();
-    
-    await delay(500);
-    
-    const demoProfile = { search: 'hello' };
-    await window.Finbro.autofill.execute(demoProfile, googleTab.id);
-    
-    setStatus('Demo complete!', 'success');
-    setTimeout(() => setStatus('Ready', 'idle'), 3000);
-  } catch (error) {
-    console.error('[Renderer] Demo failed:', error);
-    setStatus('Demo error!', 'error');
-    setTimeout(() => setStatus('Ready', 'idle'), 3000);
-  } finally {
-    setButtonLoading(btnDemoGoogle, false);
-  }
-}
-
-/**
- * Helper: Delay
- */
-function delay(ms: number): Promise<void> {
-  return new Promise(resolve => setTimeout(resolve, ms));
 }
 
 /**
  * Initialize
  */
 async function init(): Promise<void> {
-  // Button click handlers
-  btnSync.addEventListener('click', handleSyncProfile);
-  btnAutofill.addEventListener('click', handleAutofill);
-  btnDemoGoogle.addEventListener('click', handleDemoGoogleSearch);
+  // Bridge button handler
+  btnBridge.addEventListener('click', handleBridgeToggle);
   
-  // Small delay to let tabs initialize
-  await delay(100);
-  
-  // Load tabs immediately
+  // Load tabs
   await updateTabs();
   
-  // Poll for tab updates every 1 second (to catch title changes)
+  // Poll for tab updates (1 second)
   setInterval(updateTabs, 1000);
   
-  // Load config
-  try {
-    const { config } = await window.Finbro.config.get();
-    
-    // Auto-sync profile if enabled
-    if (config.autoSync) {
-      setTimeout(() => handleSyncProfile(), 500);
-    }
-  } catch (error) {
-    console.error('[Renderer] Failed to load config:', error);
-  }
+  // Poll for bridge status (2 seconds)
+  setInterval(pollBridgeStatus, 2000);
   
-  setStatus('Ready', 'idle');
+  // Initial status check
+  pollBridgeStatus();
 }
 
-// Start when DOM is ready
+// Start when DOM ready
 if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', init);
 } else {
   init();
 }
 
-// Empty export to make this a module for TypeScript
 export {};

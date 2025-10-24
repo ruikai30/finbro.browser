@@ -177,38 +177,11 @@ body {
   display: flex;
   align-items: center;
   padding: 0 20px;
-  justify-content: space-between;
+  justify-content: flex-end;
   border-top: 1px solid var(--finbro-light-grey);
 }
 
-.controls-left {
-  flex: 0 0 auto;
-  display: flex;
-  align-items: center;
-}
-
-.controls-center {
-  flex: 1 1 auto;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 12px;
-}
-
-.controls-right {
-  flex: 0 0 auto;
-  display: flex;
-  align-items: center;
-}
-
-.toolbar-title {
-  font-size: 16px;
-  font-weight: 700;
-  color: var(--finbro-purple);
-  letter-spacing: 0.5px;
-}
-
-/* Buttons */
+/* Bridge Button */
 .btn {
   padding: 10px 20px;
   border: none;
@@ -233,63 +206,28 @@ body {
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-.btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-  transform: none !important;
-}
-
-.btn-primary {
-  background: var(--finbro-purple);
+.btn-bridge.connected {
+  background: #10b981;
   color: var(--finbro-white);
 }
 
-.btn-primary:hover {
-  background: #1f0a7a;
-}
-
-.btn-secondary {
-  background: var(--finbro-light-grey);
-  color: var(--finbro-black);
-}
-
-.btn-secondary:hover {
-  background: #c0c0c0;
-}
-
-.btn-icon {
-  font-size: 16px;
-  line-height: 1;
-}
-
-/* Status Display */
-.status {
-  padding: 8px 16px;
-  background: var(--finbro-light-grey);
-  border-radius: 6px;
-  font-size: 13px;
-  font-weight: 500;
-  min-width: 120px;
-  text-align: center;
-  white-space: nowrap;
-  color: var(--finbro-grey);
-}
-
-.status.loading {
+.btn-bridge.connecting {
   background: var(--finbro-purple);
   color: var(--finbro-white);
   animation: pulse 1.5s ease-in-out infinite;
 }
 
-.status.success {
-  background: #10b981;
+.btn-bridge.disconnected {
+  background: var(--finbro-grey);
   color: var(--finbro-white);
 }
 
-.status.error {
+.btn-bridge.error {
   background: #ef4444;
   color: var(--finbro-white);
 }
+
+/* Removed: status display (now using bridge button) */
 
 /* Animations */
 @keyframes pulse {
@@ -301,23 +239,7 @@ body {
   }
 }
 
-/* Loading state */
-.btn.loading {
-  pointer-events: none;
-}
-
-.btn.loading .btn-icon {
-  animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
-}
+/* Removed: loading state styles (simplified) */
 
 /* Responsive */
 @media (max-width: 768px) {

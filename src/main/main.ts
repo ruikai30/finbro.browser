@@ -29,8 +29,8 @@ app.whenReady().then(async () => {
   // Log configuration
   const config = getConfig();
   console.log('[Main] Debug mode:', config.debugMode);
-  console.log('[Main] API URL:', config.apiBaseUrl);
   console.log('[Main] Startup tabs:', config.startupTabs.length);
+  console.log('[Main] Agent bridge:', config.agentBridgeEnabled ? 'enabled' : 'disabled');
   
   // Register IPC handlers
   registerIpcHandlers();
@@ -38,21 +38,14 @@ app.whenReady().then(async () => {
   // Create main window
   await createMainWindow();
   
-  // Initialize agent bridge if enabled
-  if (config.agentBridgeEnabled) {
-    console.log('[Main] 🤖 Agent bridge enabled, connecting...');
-    const bridge = initAgentBridge({
-      url: config.agentBridgeUrl,
-      token: config.agentToken,
-      autoReconnect: true,
-      reconnectInterval: 5000
-    });
-    
-    // Connect to agent server
-    await bridge.connect();
-  } else {
-    console.log('[Main] Agent bridge disabled');
-  }
+  // Initialize agent bridge (but don't auto-connect)
+  console.log('[Main] Initializing agent bridge (manual connect only)...');
+  initAgentBridge({
+    url: config.agentBridgeUrl,
+    token: config.agentToken,
+    autoReconnect: true,
+    reconnectInterval: 5000
+  });
   
   console.log('[Main] Initialization complete');
   

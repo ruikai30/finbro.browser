@@ -14,13 +14,13 @@ const IpcChannel = {
   TABS_CLOSE: 'tabs:close',
   TABS_GET_CURRENT: 'tabs:getCurrent',
   TABS_GET_ALL: 'tabs:getAll',
-  AUTOFILL_EXECUTE: 'autofill:execute',
-  API_SYNC_PROFILE: 'api:syncProfile',
-  API_SYNC_TARGETS: 'api:syncTargets',
   CONFIG_GET: 'config:get',
   CONFIG_SET: 'config:set',
   TOOLS_EXECUTE: 'tools:execute',
   TOOLS_GET_ALL: 'tools:getAll',
+  BRIDGE_CONNECT: 'bridge:connect',
+  BRIDGE_DISCONNECT: 'bridge:disconnect',
+  BRIDGE_STATUS: 'bridge:status',
 } as const;
 
 /**
@@ -69,44 +69,6 @@ const finbroApi = {
   },
   
   /**
-   * Autofill Operations
-   */
-  autofill: {
-    /**
-     * Execute autofill on current tab
-     */
-    execute: async (profile: any, tabId?: number): Promise<{
-      success: boolean;
-      fieldsFilled: number;
-      errors?: string[];
-    }> => {
-      return await ipcRenderer.invoke(IpcChannel.AUTOFILL_EXECUTE, {
-        profile,
-        tabId
-      });
-    }
-  },
-  
-  /**
-   * API Sync
-   */
-  api: {
-    /**
-     * Sync profile from backend
-     */
-    syncProfile: async (): Promise<{ profile: any }> => {
-      return await ipcRenderer.invoke(IpcChannel.API_SYNC_PROFILE);
-    },
-    
-    /**
-     * Sync target URLs from backend
-     */
-    syncTargets: async (): Promise<{ targets: any[] }> => {
-      return await ipcRenderer.invoke(IpcChannel.API_SYNC_TARGETS);
-    }
-  },
-  
-  /**
    * Configuration
    */
   config: {
@@ -141,6 +103,32 @@ const finbroApi = {
      */
     getAll: async (): Promise<{ tools: any[] }> => {
       return await ipcRenderer.invoke(IpcChannel.TOOLS_GET_ALL);
+    }
+  },
+  
+  /**
+   * Agent Bridge Controls
+   */
+  bridge: {
+    /**
+     * Manually connect to agent server
+     */
+    connect: async (): Promise<void> => {
+      return await ipcRenderer.invoke(IpcChannel.BRIDGE_CONNECT);
+    },
+    
+    /**
+     * Manually disconnect from agent server
+     */
+    disconnect: async (): Promise<void> => {
+      return await ipcRenderer.invoke(IpcChannel.BRIDGE_DISCONNECT);
+    },
+    
+    /**
+     * Get connection status
+     */
+    status: async (): Promise<{ state: string }> => {
+      return await ipcRenderer.invoke(IpcChannel.BRIDGE_STATUS);
     }
   }
 };

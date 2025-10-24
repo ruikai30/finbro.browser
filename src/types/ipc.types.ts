@@ -5,7 +5,6 @@
  * between renderer and main process.
  */
 
-import { ProfileData, AutofillResult, TargetUrl } from './api.types';
 import { AppConfig } from './config.types';
 
 /**
@@ -20,13 +19,6 @@ export enum IpcChannel {
   TABS_GET_CURRENT = 'tabs:getCurrent',
   TABS_GET_ALL = 'tabs:getAll',
   
-  // Autofill Operations
-  AUTOFILL_EXECUTE = 'autofill:execute',
-  
-  // API Sync
-  API_SYNC_PROFILE = 'api:syncProfile',
-  API_SYNC_TARGETS = 'api:syncTargets',
-  
   // Configuration
   CONFIG_GET = 'config:get',
   CONFIG_SET = 'config:set',
@@ -34,9 +26,12 @@ export enum IpcChannel {
   // Tool Operations (AI Agent)
   TOOLS_EXECUTE = 'tools:execute',
   TOOLS_GET_ALL = 'tools:getAll',
+  
+  // Agent Bridge Controls
+  BRIDGE_CONNECT = 'bridge:connect',
+  BRIDGE_DISCONNECT = 'bridge:disconnect',
+  BRIDGE_STATUS = 'bridge:status',
 }
-
-// Removed unimplemented: AUTOFILL_EXECUTE_ALL, CONFIG_RESET
 
 /**
  * IPC Message Type Definitions
@@ -68,23 +63,6 @@ export interface TabInfo {
 export interface TabsGetAllResponse {
   tabs: TabInfo[];
   currentTabId: number;
-}
-
-// Autofill Operations
-export interface AutofillExecuteRequest {
-  profile: ProfileData;
-  tabId?: number; // If not provided, uses current tab
-}
-
-export interface AutofillExecuteResponse extends AutofillResult {}
-
-// API Sync
-export interface SyncProfileResponse {
-  profile: ProfileData;
-}
-
-export interface SyncTargetsResponse {
-  targets: TargetUrl[];
 }
 
 // Configuration

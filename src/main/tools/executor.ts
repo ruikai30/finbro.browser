@@ -6,9 +6,8 @@
  */
 
 import { ToolCall, ToolResult } from '../../types/tool.types';
-import { executeAutofill } from '../autofill';
 
-// Import TabsManager getter (will add export to ipc.ts)
+// TabsManager getter from ipc.ts
 let getTabsManagerFunc: (() => any) | null = null;
 
 /**
@@ -81,37 +80,12 @@ export async function executeTool(call: ToolCall): Promise<ToolResult> {
           callId 
         };
       
-      case 'getCurrentUrl':
-        const currentTabId = params.tabId ?? tabsManager.getCurrentTabId();
-        const url = tabsManager.getTabUrl(currentTabId);
+      case 'executeJS':
+        const jsTabId = params.tabId ?? tabsManager.getCurrentTabId();
+        result = await tabsManager.executeInTab(jsTabId, params.code);
         return { 
           success: true, 
-          data: { url }, 
-          callId 
-        };
-      
-      case 'getPageText':
-        const textTabId = params.tabId ?? tabsManager.getCurrentTabId();
-        const text = await tabsManager.executeInTab(
-          textTabId,
-          'document.body.innerText'
-        );
-        return { 
-          success: true, 
-          data: { text }, 
-          callId 
-        };
-      
-      case 'autofill':
-        const fillTabId = params.tabId ?? tabsManager.getCurrentTabId();
-        result = await executeAutofill(
-          fillTabId,
-          params.profile,
-          (tid, code) => tabsManager.executeInTab(tid, code)
-        );
-        return { 
-          success: result.success, 
-          data: result, 
+          data: { result }, 
           callId 
         };
       

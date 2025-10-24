@@ -65,50 +65,22 @@ export const TOOL_REGISTRY: Record<string, ToolDefinition> = {
     }
   },
   
-  getCurrentUrl: {
-    name: 'getCurrentUrl',
-    description: 'Gets the current URL of the active tab or specified tab',
+  executeJS: {
+    name: 'executeJS',
+    description: 'Executes arbitrary JavaScript code in the specified tab context. Returns the result. Use this for: getting URL (window.location.href), getting page text (document.body.innerText), scrolling (window.scrollBy), clicking (element.click()), filling forms (element.value=), etc.',
     parameters: {
       type: 'object',
       properties: {
-        tabId: {
-          type: 'number',
-          description: 'Optional: Tab ID. If not provided, uses currently active tab'
-        }
-      }
-    }
-  },
-  
-  getPageText: {
-    name: 'getPageText',
-    description: 'Extracts all visible text content from the page',
-    parameters: {
-      type: 'object',
-      properties: {
-        tabId: {
-          type: 'number',
-          description: 'Optional: Tab ID. If not provided, uses currently active tab'
-        }
-      }
-    }
-  },
-  
-  autofill: {
-    name: 'autofill',
-    description: 'Automatically fills form fields on the current or specified tab using profile data',
-    parameters: {
-      type: 'object',
-      properties: {
-        profile: {
-          type: 'object',
-          description: 'Profile data containing firstName, lastName, email, phone, linkedin, etc.'
+        code: {
+          type: 'string',
+          description: 'JavaScript code to execute. Examples: "window.location.href", "document.body.innerText", "window.scrollBy(0,500)", "document.querySelector(\'#btn\').click()"'
         },
         tabId: {
           type: 'number',
-          description: 'Optional: Tab ID to fill. If not provided, uses currently active tab'
+          description: 'Optional: Tab ID. If not provided, uses currently active tab'
         }
       },
-      required: ['profile']
+      required: ['code']
     }
   }
 };

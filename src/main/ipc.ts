@@ -8,16 +8,11 @@
 import { ipcMain, IpcMainInvokeEvent } from 'electron';
 import { IpcChannel } from '../types/ipc.types';
 import { TabsManager } from './tabs';
-import { executeAutofill } from './autofill';
-import { fetchProfile, fetchTargets } from './api';
 import { getConfig, setConfig } from './config';
-import { ProfileData } from '../types/api.types';
 import { ToolCall } from '../types/tool.types';
 import { executeTool, setTabsManagerGetter } from './tools/executor';
 import { getAllToolDefinitions } from './tools/registry';
-
-// Cached profile data (in-memory)
-let cachedProfile: ProfileData | null = null;
+import { getAgentBridge } from './agent-bridge';
 
 // TabsManager instance (set by windows.ts)
 let tabsManager: TabsManager | null = null;
@@ -54,13 +49,6 @@ export function registerIpcHandlers(): void {
   ipcMain.handle(IpcChannel.TABS_GET_CURRENT, handleTabGetCurrent);
   ipcMain.handle(IpcChannel.TABS_GET_ALL, handleTabGetAll);
   
-  // Autofill Operations
-  ipcMain.handle(IpcChannel.AUTOFILL_EXECUTE, handleAutofillExecute);
-  
-  // API Sync
-  ipcMain.handle(IpcChannel.API_SYNC_PROFILE, handleApiSyncProfile);
-  ipcMain.handle(IpcChannel.API_SYNC_TARGETS, handleApiSyncTargets);
-  
   // Configuration
   ipcMain.handle(IpcChannel.CONFIG_GET, handleConfigGet);
   ipcMain.handle(IpcChannel.CONFIG_SET, handleConfigSet);
@@ -68,6 +56,11 @@ export function registerIpcHandlers(): void {
   // Tool Operations
   ipcMain.handle(IpcChannel.TOOLS_EXECUTE, handleToolExecute);
   ipcMain.handle(IpcChannel.TOOLS_GET_ALL, handleToolsGetAll);
+  
+  // Agent Bridge Controls
+  ipcMain.handle(IpcChannel.BRIDGE_CONNECT, handleBridgeConnect);
+  ipcMain.handle(IpcChannel.BRIDGE_DISCONNECT, handleBridgeDisconnect);
+  ipcMain.handle(IpcChannel.BRIDGE_STATUS, handleBridgeStatus);
   
   console.log('[IPC] All handlers registered');
 }
@@ -140,80 +133,6 @@ async function handleTabGetAll(
 }
 
 /**
- * Autofill Handlers
- */
-
-async function handleAutofillExecute(
-  event: IpcMainInvokeEvent,
-  args: { profile: ProfileData; tabId?: number }
-): Promise<{ success: boolean; fieldsFilled: number; errors?: string[] }> {
-  if (!tabsManager) {
-    throw new Error('TabsManager not initialized');
-  }
-  
-  const targetTabId = args.tabId ?? tabsManager.getCurrentTabId();
-  
-  console.log('[IPC] autofill:execute - tab:', targetTabId);
-  
-  // Use provided profile or cached profile
-  const profile = args.profile || cachedProfile;
-  
-  if (!profile) {
-    throw new Error('No profile data available');
-  }
-  
-  // Execute autofill
-  const result = await executeAutofill(
-    targetTabId,
-    profile,
-    (tabId, code) => tabsManager!.executeInTab(tabId, code)
-  );
-  
-  return result;
-}
-
-/**
- * API Sync Handlers
- */
-
-async function handleApiSyncProfile(
-  event: IpcMainInvokeEvent
-): Promise<{ profile: ProfileData }> {
-  console.log('[IPC] api:syncProfile');
-  
-  try {
-    const profile = await fetchProfile();
-    
-    // Cache the profile
-    cachedProfile = profile;
-    
-    console.log('[IPC] Profile synced:', profile.email);
-    
-    return { profile };
-  } catch (error) {
-    console.error('[IPC] Failed to sync profile:', error);
-    throw error;
-  }
-}
-
-async function handleApiSyncTargets(
-  event: IpcMainInvokeEvent
-): Promise<{ targets: any[] }> {
-  console.log('[IPC] api:syncTargets');
-  
-  try {
-    const targets = await fetchTargets();
-    
-    console.log('[IPC] Targets synced:', targets.length);
-    
-    return { targets };
-  } catch (error) {
-    console.error('[IPC] Failed to sync targets:', error);
-    throw error;
-  }
-}
-
-/**
  * Config Handlers
  */
 
@@ -250,5 +169,35 @@ async function handleToolsGetAll(
 ): Promise<{ tools: any[] }> {
   const tools = getAllToolDefinitions();
   return { tools };
+}
+
+/**
+ * Agent Bridge Control Handlers
+ */
+
+async function handleBridgeConnect(
+  event: IpcMainInvokeEvent
+): Promise<void> {
+  const bridge = getAgentBridge();
+  if (bridge) {
+    await bridge.connect();
+  }
+}
+
+async function handleBridgeDisconnect(
+  event: IpcMainInvokeEvent
+): Promise<void> {
+  const bridge = getAgentBridge();
+  if (bridge) {
+    bridge.disconnect();
+  }
+}
+
+async function handleBridgeStatus(
+  event: IpcMainInvokeEvent
+): Promise<{ state: string }> {
+  const bridge = getAgentBridge();
+  const state = bridge ? bridge.getState() : 'disconnected';
+  return { state };
 }
 
