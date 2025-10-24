@@ -22,7 +22,6 @@ export enum IpcChannel {
   
   // Autofill Operations
   AUTOFILL_EXECUTE = 'autofill:execute',
-  AUTOFILL_EXECUTE_ALL = 'autofill:executeAll',
   
   // API Sync
   API_SYNC_PROFILE = 'api:syncProfile',
@@ -31,8 +30,13 @@ export enum IpcChannel {
   // Configuration
   CONFIG_GET = 'config:get',
   CONFIG_SET = 'config:set',
-  CONFIG_RESET = 'config:reset',
+  
+  // Tool Operations (AI Agent)
+  TOOLS_EXECUTE = 'tools:execute',
+  TOOLS_GET_ALL = 'tools:getAll',
 }
+
+// Removed unimplemented: AUTOFILL_EXECUTE_ALL, CONFIG_RESET
 
 /**
  * IPC Message Type Definitions
@@ -92,46 +96,5 @@ export interface ConfigGetResponse {
   config: AppConfig;
 }
 
-/**
- * Type-safe IPC handler map
- * Maps channel names to their request/response types
- */
-export interface IpcHandlerMap {
-  [IpcChannel.TABS_CREATE]: {
-    request: TabCreateRequest;
-    response: TabCreateResponse;
-  };
-  [IpcChannel.TABS_SWITCH]: {
-    request: TabSwitchRequest;
-    response: void;
-  };
-  [IpcChannel.TABS_CLOSE]: {
-    request: TabCloseRequest;
-    response: void;
-  };
-  [IpcChannel.TABS_GET_CURRENT]: {
-    request: void;
-    response: number;
-  };
-  [IpcChannel.AUTOFILL_EXECUTE]: {
-    request: AutofillExecuteRequest;
-    response: AutofillExecuteResponse;
-  };
-  [IpcChannel.API_SYNC_PROFILE]: {
-    request: void;
-    response: SyncProfileResponse;
-  };
-  [IpcChannel.API_SYNC_TARGETS]: {
-    request: void;
-    response: SyncTargetsResponse;
-  };
-  [IpcChannel.CONFIG_GET]: {
-    request: void;
-    response: ConfigGetResponse;
-  };
-  [IpcChannel.CONFIG_SET]: {
-    request: ConfigSetRequest;
-    response: void;
-  };
-}
+// Removed unused: IpcHandlerMap interface
 

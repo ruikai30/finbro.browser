@@ -147,8 +147,5 @@ function simulateNetworkDelay(ms: number): Promise<void> {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-// Export for testing
-export const __testing = {
-  simulateNetworkDelay
-};
+// Removed unused: __testing export
 

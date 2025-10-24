@@ -129,26 +129,5 @@ function setupWindowHandlers(
   });
 }
 
-/**
- * Get the main window instance
- */
-export function getMainWindow(): BrowserWindow | null {
-  return mainWindow;
-}
-
-/**
- * Get the tabs manager instance
- */
-export function getTabsManager(): TabsManager | null {
-  return tabsManager;
-}
-
-/**
- * Close all windows and clean up
- */
-export function closeAllWindows(): void {
-  if (mainWindow) {
-    mainWindow.close();
-  }
-}
+// Removed unused exports: getMainWindow, getTabsManager (duplicate), closeAllWindows
 

@@ -31,6 +31,10 @@ declare global {
         get: () => Promise<{ config: any }>;
         set: (config: any) => Promise<void>;
       };
+      tools: {
+        execute: (call: any) => Promise<any>;
+        getAll: () => Promise<{ tools: any[] }>;
+      };
     };
   }
 }

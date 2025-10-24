@@ -64,14 +64,6 @@ export function setConfigValue<K extends keyof AppConfig>(
 }
 
 /**
- * Reset configuration to defaults
- */
-export function resetConfig(): void {
-  store.clear();
-  console.log('[Config] Reset to defaults');
-}
-
-/**
  * Get the file path where config is stored
  * Useful for debugging
  */
@@ -79,13 +71,8 @@ export function getConfigPath(): string {
   return store.path;
 }
 
-/**
- * Check if this is the first run (no config exists)
- */
-export function isFirstRun(): boolean {
-  return store.size === 0;
-}
-
 // Log config path on startup for debugging
 console.log('[Config] Storage path:', getConfigPath());
+
+// Removed unused: resetConfig, isFirstRun
 

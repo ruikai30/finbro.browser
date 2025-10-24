@@ -9,6 +9,7 @@ import { app, BrowserWindow } from 'electron';
 import { createMainWindow } from './windows';
 import { registerIpcHandlers } from './ipc';
 import { getConfig } from './config';
+import { initAgentBridge } from './agent-bridge';
 
 console.log('='.repeat(60));
 console.log('Finbro Browser - Starting');
@@ -36,6 +37,22 @@ app.whenReady().then(async () => {
   
   // Create main window
   await createMainWindow();
+  
+  // Initialize agent bridge if enabled
+  if (config.agentBridgeEnabled) {
+    console.log('[Main] 🤖 Agent bridge enabled, connecting...');
+    const bridge = initAgentBridge({
+      url: config.agentBridgeUrl,
+      token: config.agentToken,
+      autoReconnect: true,
+      reconnectInterval: 5000
+    });
+    
+    // Connect to agent server
+    await bridge.connect();
+  } else {
+    console.log('[Main] Agent bridge disabled');
+  }
   
   console.log('[Main] Initialization complete');
   

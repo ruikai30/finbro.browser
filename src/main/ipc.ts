@@ -12,6 +12,9 @@ import { executeAutofill } from './autofill';
 import { fetchProfile, fetchTargets } from './api';
 import { getConfig, setConfig } from './config';
 import { ProfileData } from '../types/api.types';
+import { ToolCall } from '../types/tool.types';
+import { executeTool, setTabsManagerGetter } from './tools/executor';
+import { getAllToolDefinitions } from './tools/registry';
 
 // Cached profile data (in-memory)
 let cachedProfile: ProfileData | null = null;
@@ -25,7 +28,16 @@ let tabsManager: TabsManager | null = null;
  */
 export function setTabsManager(manager: TabsManager): void {
   tabsManager = manager;
-  console.log('[IPC] TabsManager registered');
+  
+  // Also set up the getter for tools
+  setTabsManagerGetter(() => tabsManager);
+}
+
+/**
+ * Get the tabs manager instance (for other modules)
+ */
+export function getTabsManager(): TabsManager | null {
+  return tabsManager;
 }
 
 /**
@@ -52,6 +64,10 @@ export function registerIpcHandlers(): void {
   // Configuration
   ipcMain.handle(IpcChannel.CONFIG_GET, handleConfigGet);
   ipcMain.handle(IpcChannel.CONFIG_SET, handleConfigSet);
+  
+  // Tool Operations
+  ipcMain.handle(IpcChannel.TOOLS_EXECUTE, handleToolExecute);
+  ipcMain.handle(IpcChannel.TOOLS_GET_ALL, handleToolsGetAll);
   
   console.log('[IPC] All handlers registered');
 }
@@ -216,17 +232,23 @@ async function handleConfigSet(
   setConfig(args.config);
 }
 
-/**
- * Get cached profile (for use by other modules)
- */
-export function getCachedProfile(): ProfileData | null {
-  return cachedProfile;
-}
+// Removed unused: getCachedProfile, setCachedProfile
 
 /**
- * Set cached profile (for use by other modules)
+ * Tool Operation Handlers
  */
-export function setCachedProfile(profile: ProfileData): void {
-  cachedProfile = profile;
+
+async function handleToolExecute(
+  event: IpcMainInvokeEvent,
+  call: ToolCall
+): Promise<any> {
+  return await executeTool(call);
+}
+
+async function handleToolsGetAll(
+  event: IpcMainInvokeEvent
+): Promise<{ tools: any[] }> {
+  const tools = getAllToolDefinitions();
+  return { tools };
 }
 

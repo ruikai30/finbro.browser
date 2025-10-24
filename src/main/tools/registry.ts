@@ -1,0 +1,124 @@
+/**
+ * Tool Registry
+ * 
+ * Central registry of all available tools with their schemas.
+ * Schemas follow OpenAI/Anthropic function calling format.
+ */
+
+import { ToolDefinition } from '../../types/tool.types';
+
+/**
+ * All available tools for AI agent consumption
+ */
+export const TOOL_REGISTRY: Record<string, ToolDefinition> = {
+  newTab: {
+    name: 'newTab',
+    description: 'Opens a new browser tab and navigates to the specified URL',
+    parameters: {
+      type: 'object',
+      properties: {
+        url: {
+          type: 'string',
+          description: 'Full URL to navigate to (must include https:// or http://)'
+        }
+      },
+      required: ['url']
+    }
+  },
+  
+  closeTab: {
+    name: 'closeTab',
+    description: 'Closes a browser tab by ID',
+    parameters: {
+      type: 'object',
+      properties: {
+        tabId: {
+          type: 'number',
+          description: 'ID of the tab to close'
+        }
+      },
+      required: ['tabId']
+    }
+  },
+  
+  switchTab: {
+    name: 'switchTab',
+    description: 'Switches to a specific tab by ID, bringing it to the foreground',
+    parameters: {
+      type: 'object',
+      properties: {
+        tabId: {
+          type: 'number',
+          description: 'ID of the tab to switch to'
+        }
+      },
+      required: ['tabId']
+    }
+  },
+  
+  getAllTabs: {
+    name: 'getAllTabs',
+    description: 'Gets information about all open tabs including IDs, URLs, and titles',
+    parameters: {
+      type: 'object',
+      properties: {}
+    }
+  },
+  
+  getCurrentUrl: {
+    name: 'getCurrentUrl',
+    description: 'Gets the current URL of the active tab or specified tab',
+    parameters: {
+      type: 'object',
+      properties: {
+        tabId: {
+          type: 'number',
+          description: 'Optional: Tab ID. If not provided, uses currently active tab'
+        }
+      }
+    }
+  },
+  
+  getPageText: {
+    name: 'getPageText',
+    description: 'Extracts all visible text content from the page',
+    parameters: {
+      type: 'object',
+      properties: {
+        tabId: {
+          type: 'number',
+          description: 'Optional: Tab ID. If not provided, uses currently active tab'
+        }
+      }
+    }
+  },
+  
+  autofill: {
+    name: 'autofill',
+    description: 'Automatically fills form fields on the current or specified tab using profile data',
+    parameters: {
+      type: 'object',
+      properties: {
+        profile: {
+          type: 'object',
+          description: 'Profile data containing firstName, lastName, email, phone, linkedin, etc.'
+        },
+        tabId: {
+          type: 'number',
+          description: 'Optional: Tab ID to fill. If not provided, uses currently active tab'
+        }
+      },
+      required: ['profile']
+    }
+  }
+};
+
+/**
+ * Get all tool definitions (for agent consumption)
+ */
+export function getAllToolDefinitions(): ToolDefinition[] {
+  return Object.values(TOOL_REGISTRY);
+}
+
+// Removed unused: getToolDefinition, toolExists
+

@@ -28,6 +28,11 @@ export interface AppConfig {
   // UI Preferences
   toolbarHeight: number;
   showStatusBar: boolean;
+  
+  // Agent Bridge (AI Control)
+  agentBridgeEnabled: boolean;
+  agentBridgeUrl: string;
+  agentToken: string;
 }
 
 /**
@@ -56,6 +61,10 @@ export const DEFAULT_CONFIG: AppConfig = {
   debugMode: false,
   
   toolbarHeight: 100,
-  showStatusBar: true
+  showStatusBar: true,
+  
+  agentBridgeEnabled: true,
+  agentBridgeUrl: 'ws://127.0.0.1:8000/browseragent/ws',
+  agentToken: 'test-token-123'
 };
 

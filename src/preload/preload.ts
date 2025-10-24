@@ -19,6 +19,8 @@ const IpcChannel = {
   API_SYNC_TARGETS: 'api:syncTargets',
   CONFIG_GET: 'config:get',
   CONFIG_SET: 'config:set',
+  TOOLS_EXECUTE: 'tools:execute',
+  TOOLS_GET_ALL: 'tools:getAll',
 } as const;
 
 /**
@@ -120,6 +122,25 @@ const finbroApi = {
      */
     set: async (config: any): Promise<void> => {
       return await ipcRenderer.invoke(IpcChannel.CONFIG_SET, { config });
+    }
+  },
+  
+  /**
+   * Tool Operations (AI Agent)
+   */
+  tools: {
+    /**
+     * Execute a tool call
+     */
+    execute: async (call: any): Promise<any> => {
+      return await ipcRenderer.invoke(IpcChannel.TOOLS_EXECUTE, call);
+    },
+    
+    /**
+     * Get all available tools with their schemas
+     */
+    getAll: async (): Promise<{ tools: any[] }> => {
+      return await ipcRenderer.invoke(IpcChannel.TOOLS_GET_ALL);
     }
   }
 };
