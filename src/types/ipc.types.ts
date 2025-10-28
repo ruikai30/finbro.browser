@@ -31,6 +31,7 @@ export enum IpcChannel {
   BRIDGE_CONNECT = 'bridge:connect',
   BRIDGE_DISCONNECT = 'bridge:disconnect',
   BRIDGE_STATUS = 'bridge:status',
+  BRIDGE_SEND_PROMPT = 'bridge:sendPrompt',
 }
 
 /**
@@ -72,6 +73,11 @@ export interface ConfigSetRequest {
 
 export interface ConfigGetResponse {
   config: AppConfig;
+}
+
+// Agent Bridge
+export interface BridgeSendPromptRequest {
+  prompt: string;
 }
 
 // Removed unused: IpcHandlerMap interface

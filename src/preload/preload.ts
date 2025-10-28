@@ -129,6 +129,14 @@ const finbroApi = {
      */
     status: async (): Promise<{ state: string }> => {
       return await ipcRenderer.invoke(IpcChannel.BRIDGE_STATUS);
+    },
+    
+    /**
+     * Send a prompt to the AI agent
+     */
+    sendPrompt: async (prompt: string): Promise<void> => {
+      // Using string literal due to TypeScript enum resolution issue
+      return await ipcRenderer.invoke('bridge:sendPrompt', { prompt });
     }
   }
 };

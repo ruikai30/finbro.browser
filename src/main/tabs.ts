@@ -57,8 +57,8 @@ export class TabsManager {
       }
     });
     
-    // Add to window
-    this.window.addBrowserView(view);
+    // DON'T add to window yet - only the active tab should be visible
+    // This prevents overlapping tabs
     
     // Create tab object
     const tab: Tab = {
@@ -72,6 +72,9 @@ export class TabsManager {
     // Set up event listeners
     this.setupTabListeners(tab);
     
+    // Layout the tab (sets bounds even if not visible yet)
+    this.layoutTab(tab);
+    
     // Load URL
     try {
       await view.webContents.loadURL(url);
@@ -81,9 +84,6 @@ export class TabsManager {
     } catch (error) {
       console.error('[Tabs] Failed to load URL:', url, error);
     }
-    
-    // Layout the tab
-    this.layoutTab(tab);
     
     return tab.id;
   }
@@ -100,11 +100,24 @@ export class TabsManager {
       return;
     }
     
-    // Set as top view (brings to front)
+    // Remove all BrowserViews first to prevent overlapping
+    for (const t of this.tabs) {
+      try {
+        this.window.removeBrowserView(t.view);
+      } catch (error) {
+        // View might not be added to window yet, which is fine
+        if (getConfigValue('debugMode')) {
+          console.log('[Tabs] View not in window (expected):', t.id);
+        }
+      }
+    }
+    
+    // Add and show only the selected tab
+    this.window.addBrowserView(tab.view);
     this.window.setTopBrowserView(tab.view);
     this.currentTabId = tabId;
     
-    // Re-layout to ensure proper bounds
+    // Layout the tab to ensure proper bounds
     this.layoutTab(tab);
     
     if (getConfigValue('debugMode')) {

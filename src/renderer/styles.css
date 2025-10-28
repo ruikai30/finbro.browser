@@ -177,23 +177,46 @@ body {
   display: flex;
   align-items: center;
   padding: 0 20px;
-  justify-content: flex-end;
+  gap: 12px;
   border-top: 1px solid var(--finbro-light-grey);
 }
 
-/* Bridge Button */
+/* Prompt Input */
+.prompt-input {
+  flex: 1;
+  height: 40px;
+  padding: 0 16px;
+  border: 2px solid var(--finbro-light-grey);
+  border-radius: 6px;
+  font-size: 14px;
+  font-family: inherit;
+  transition: all 0.2s ease;
+  outline: none;
+}
+
+.prompt-input:focus {
+  border-color: var(--finbro-purple);
+  box-shadow: 0 0 0 3px rgba(41, 14, 153, 0.1);
+}
+
+.prompt-input::placeholder {
+  color: var(--finbro-grey);
+}
+
+/* Send Button */
 .btn {
-  padding: 10px 20px;
+  padding: 10px 24px;
   border: none;
   border-radius: 6px;
   font-size: 14px;
-  font-weight: 500;
+  font-weight: 600;
   cursor: pointer;
   display: inline-flex;
   align-items: center;
   gap: 8px;
   transition: all 0.2s ease;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  white-space: nowrap;
 }
 
 .btn:hover {
@@ -206,25 +229,42 @@ body {
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-.btn-bridge.connected {
-  background: #10b981;
-  color: var(--finbro-white);
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none !important;
 }
 
-.btn-bridge.connecting {
+.btn-send {
   background: var(--finbro-purple);
   color: var(--finbro-white);
+  height: 40px;
+}
+
+.btn-send:hover:not(:disabled) {
+  background: #3a1acc;
+}
+
+/* Connection Status */
+.connection-status {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--finbro-grey);
+  white-space: nowrap;
+  padding: 0 12px;
+}
+
+.connection-status.connected {
+  color: #10b981;
+}
+
+.connection-status.connecting {
+  color: var(--finbro-purple);
   animation: pulse 1.5s ease-in-out infinite;
 }
 
-.btn-bridge.disconnected {
-  background: var(--finbro-grey);
-  color: var(--finbro-white);
-}
-
-.btn-bridge.error {
-  background: #ef4444;
-  color: var(--finbro-white);
+.connection-status.error {
+  color: #ef4444;
 }
 
 /* Removed: status display (now using bridge button) */

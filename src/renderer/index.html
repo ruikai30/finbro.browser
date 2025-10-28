@@ -15,11 +15,19 @@
       <!-- Tabs dynamically rendered here -->
     </div>
     
-    <!-- Controls Bar (Single Connect Button) -->
+    <!-- Controls Bar (Chat Interface) -->
     <div class="controls-bar">
-      <button id="btn-bridge" class="btn btn-bridge" title="Connect/Disconnect from AI Agent">
-        <span id="bridge-status">Connecting...</span>
+      <input 
+        type="text" 
+        id="prompt-input" 
+        class="prompt-input" 
+        placeholder="Type your prompt here..." 
+        autocomplete="off"
+      />
+      <button id="btn-send" class="btn btn-send" title="Send prompt to AI Agent">
+        Send
       </button>
+      <span id="connection-status" class="connection-status">Disconnected</span>
     </div>
   </header>
   

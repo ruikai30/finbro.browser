@@ -25,72 +25,144 @@ declare global {
         connect: () => Promise<void>;
         disconnect: () => Promise<void>;
         status: () => Promise<{ state: string }>;
+        sendPrompt: (prompt: string) => Promise<void>;
       };
     };
   }
 }
 
 // DOM Elements
-const btnBridge = document.getElementById('btn-bridge') as HTMLButtonElement;
-const bridgeStatus = document.getElementById('bridge-status') as HTMLSpanElement;
+const promptInput = document.getElementById('prompt-input') as HTMLInputElement;
+const btnSend = document.getElementById('btn-send') as HTMLButtonElement;
+const connectionStatus = document.getElementById('connection-status') as HTMLSpanElement;
 const tabBar = document.getElementById('tab-bar') as HTMLDivElement;
 
 // State
 let currentTabId: number = -1;
 let tabs: Array<{ id: number; url: string; title?: string }> = [];
 let connectionState: string = 'disconnected';
+let isProcessing: boolean = false;
 
 /**
- * Update bridge button based on connection state
+ * Update connection status display
  */
-function updateBridgeButton(state: string): void {
+function updateConnectionStatus(state: string): void {
   connectionState = state;
+  
+  // Remove all state classes
+  connectionStatus.classList.remove('connected', 'connecting', 'error');
   
   switch (state) {
     case 'connected':
-      bridgeStatus.textContent = 'Connected ✅';
-      btnBridge.className = 'btn btn-bridge connected';
+      connectionStatus.textContent = 'Connected ✅';
+      connectionStatus.classList.add('connected');
       break;
     case 'connecting':
-      bridgeStatus.textContent = 'Connecting...';
-      btnBridge.className = 'btn btn-bridge connecting';
+      connectionStatus.textContent = 'Connecting...';
+      connectionStatus.classList.add('connecting');
       break;
     case 'error':
-      bridgeStatus.textContent = 'Error ❌';
-      btnBridge.className = 'btn btn-bridge error';
+      connectionStatus.textContent = 'Error ❌';
+      connectionStatus.classList.add('error');
       break;
     case 'disconnected':
     default:
-      bridgeStatus.textContent = 'Disconnected';
-      btnBridge.className = 'btn btn-bridge disconnected';
+      connectionStatus.textContent = 'Disconnected';
       break;
   }
 }
 
 /**
- * Handle bridge button click (toggle connect/disconnect)
+ * Update UI based on processing state
  */
-async function handleBridgeToggle(): Promise<void> {
+function updateProcessingState(processing: boolean): void {
+  isProcessing = processing;
+  btnSend.disabled = processing || !promptInput.value.trim();
+  promptInput.disabled = processing;
+  
+  if (processing) {
+    btnSend.textContent = 'Processing...';
+  } else {
+    btnSend.textContent = 'Send';
+  }
+}
+
+/**
+ * Send prompt to AI agent
+ */
+async function sendPrompt(): Promise<void> {
+  const prompt = promptInput.value.trim();
+  
+  if (!prompt || isProcessing) {
+    return;
+  }
+  
   try {
-    if (connectionState === 'connected') {
-      // Disconnect
-      await window.Finbro.bridge.disconnect();
-      updateBridgeButton('disconnected');
-    } else {
-      // Connect
-      updateBridgeButton('connecting');
+    updateProcessingState(true);
+    
+    // Auto-connect if not connected
+    if (connectionState !== 'connected') {
+      console.log('[Renderer] Auto-connecting to agent...');
+      updateConnectionStatus('connecting');
       await window.Finbro.bridge.connect();
       
-      // Poll for status
-      setTimeout(async () => {
-        const { state } = await window.Finbro.bridge.status();
-        updateBridgeButton(state);
-      }, 500);
+      // Wait for connection to establish
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      const { state } = await window.Finbro.bridge.status();
+      updateConnectionStatus(state);
+      
+      if (state !== 'connected') {
+        throw new Error('Failed to connect to agent');
+      }
     }
+    
+    // Send prompt
+    console.log('[Renderer] Sending prompt:', prompt);
+    await window.Finbro.bridge.sendPrompt(prompt);
+    
+    // Clear input
+    promptInput.value = '';
+    
+    // Reset processing state after a delay (agent will handle the work)
+    // The agent processes autonomously - we just send the prompt and done
+    setTimeout(() => {
+      updateProcessingState(false);
+    }, 2000);
+    
   } catch (error) {
-    console.error('[Renderer] Bridge toggle failed:', error);
-    updateBridgeButton('error');
+    console.error('[Renderer] Failed to send prompt:', error);
+    updateConnectionStatus('error');
+    updateProcessingState(false);
+    
+    // Show error in a non-blocking way
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    console.error('[Renderer] Error details:', errorMessage);
   }
+}
+
+/**
+ * Handle send button click
+ */
+async function handleSendClick(): Promise<void> {
+  await sendPrompt();
+}
+
+/**
+ * Handle Enter key in prompt input
+ */
+function handlePromptKeydown(event: KeyboardEvent): void {
+  if (event.key === 'Enter' && !event.shiftKey) {
+    event.preventDefault();
+    sendPrompt();
+  }
+}
+
+/**
+ * Handle input changes (enable/disable send button)
+ */
+function handlePromptInput(): void {
+  btnSend.disabled = !promptInput.value.trim() || isProcessing;
 }
 
 /**
@@ -259,7 +331,7 @@ async function handleNewTab(): Promise<void> {
 async function pollBridgeStatus(): Promise<void> {
   try {
     const { state } = await window.Finbro.bridge.status();
-    updateBridgeButton(state);
+    updateConnectionStatus(state);
   } catch (error) {
     // Silently fail
   }
@@ -269,8 +341,15 @@ async function pollBridgeStatus(): Promise<void> {
  * Initialize
  */
 async function init(): Promise<void> {
-  // Bridge button handler
-  btnBridge.addEventListener('click', handleBridgeToggle);
+  // Send button handler
+  btnSend.addEventListener('click', handleSendClick);
+  
+  // Prompt input handlers
+  promptInput.addEventListener('keydown', handlePromptKeydown);
+  promptInput.addEventListener('input', handlePromptInput);
+  
+  // Initial button state
+  btnSend.disabled = true;
   
   // Load tabs
   await updateTabs();

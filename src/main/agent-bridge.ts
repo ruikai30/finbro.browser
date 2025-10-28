@@ -88,14 +88,30 @@ export class AgentBridge {
   /**
    * Send data to the agent
    */
-  send(data: any): void {
+  private send(data: object | string): void {
     if (this.state !== 'connected' || !this.ws) {
-      console.error('[AgentBridge] Cannot send: not connected');
-      return;
+      throw new Error('Not connected to agent');
     }
     
     const payload = typeof data === 'string' ? data : JSON.stringify(data);
     this.ws.send(payload);
+  }
+  
+  /**
+   * Send a prompt to the AI agent
+   */
+  sendPrompt(prompt: string): void {
+    if (!prompt || !prompt.trim()) {
+      throw new Error('Prompt cannot be empty');
+    }
+    
+    console.log('[AgentBridge] 📤 Sending prompt:', prompt);
+    
+    this.send({
+      type: 'prompt',
+      prompt: prompt.trim(),
+      timestamp: Date.now()
+    });
   }
   
   /**

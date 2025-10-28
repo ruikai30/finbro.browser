@@ -6,7 +6,7 @@
  */
 
 import { ipcMain, IpcMainInvokeEvent } from 'electron';
-import { IpcChannel } from '../types/ipc.types';
+import { IpcChannel, BridgeSendPromptRequest } from '../types/ipc.types';
 import { TabsManager } from './tabs';
 import { getConfig, setConfig } from './config';
 import { ToolCall } from '../types/tool.types';
@@ -61,6 +61,7 @@ export function registerIpcHandlers(): void {
   ipcMain.handle(IpcChannel.BRIDGE_CONNECT, handleBridgeConnect);
   ipcMain.handle(IpcChannel.BRIDGE_DISCONNECT, handleBridgeDisconnect);
   ipcMain.handle(IpcChannel.BRIDGE_STATUS, handleBridgeStatus);
+  ipcMain.handle(IpcChannel.BRIDGE_SEND_PROMPT, handleBridgeSendPrompt);
   
   console.log('[IPC] All handlers registered');
 }
@@ -199,5 +200,22 @@ async function handleBridgeStatus(
   const bridge = getAgentBridge();
   const state = bridge ? bridge.getState() : 'disconnected';
   return { state };
+}
+
+async function handleBridgeSendPrompt(
+  event: IpcMainInvokeEvent,
+  args: BridgeSendPromptRequest
+): Promise<void> {
+  const bridge = getAgentBridge();
+  if (!bridge) {
+    throw new Error('Agent bridge not initialized');
+  }
+  
+  const promptPreview = args.prompt.length > 50 
+    ? args.prompt.substring(0, 50) + '...' 
+    : args.prompt;
+  console.log('[IPC] bridge:sendPrompt -', promptPreview);
+  
+  bridge.sendPrompt(args.prompt);
 }
 
