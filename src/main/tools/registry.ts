@@ -13,13 +13,17 @@ import { ToolDefinition } from '../../types/tool.types';
 export const TOOL_REGISTRY: Record<string, ToolDefinition> = {
   newTab: {
     name: 'newTab',
-    description: 'Opens a new browser tab and navigates to the specified URL',
+    description: 'Opens a new browser tab and navigates to the specified URL. Defaults to focusing the new tab unless focus=false is provided.',
     parameters: {
       type: 'object',
       properties: {
         url: {
           type: 'string',
           description: 'Full URL to navigate to (must include https:// or http://)'
+        },
+        focus: {
+          type: 'boolean',
+          description: 'Optional: If false, do not switch focus to the new tab (default true)'
         }
       },
       required: ['url']

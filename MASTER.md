@@ -92,8 +92,10 @@ finbro.browser/
 ### Browser Control (Can't Do via JS):
 
 **1. newTab**  
-Open new tab  
-`{ url: string }` → `{ tabId: number }`
+Open new tab (auto-focus by default)  
+`{ url: string, focus?: boolean }` → `{ tabId: number }`
+  - Default: `focus = true` (switches to the new tab)
+  - Opt-out: pass `{"focus": false}` to keep current tab active
 
 **2. closeTab**  
 Close tab  
@@ -159,19 +161,221 @@ Execute any JavaScript
 
 ## 🔄 How It Works
 
+### Startup:
 ```
 1. npm run dev
-2. finbro.me loads
-3. Button: "Disconnected"
-4. Click button
-5. Connects to ws://127.0.0.1:8000/browseragent/ws
-6. Button: "Connected ✅"
-7. FastAPI sends: {"tool":"executeJS","params":{"code":"..."}}
-8. Browser executes, returns result
-9. FastAPI receives response
+2. finbro.me loads in ONE tab
+3. Button shows "Disconnected"
+4. Agent bridge initialized (but NOT connected)
+5. User clicks "Connect" button
+6. Connects to ws://127.0.0.1:8000/browseragent/ws
+7. Button shows "Connected ✅"
+8. Browser waits for tool calls from FastAPI
 ```
 
-**That's it. Pure tool execution.**
+### WebSocket Communication Pattern:
+
+**CRITICAL:** Every `send_json()` MUST be followed by `receive_json()` to get the result!
+
+```python
+# FastAPI sends tool call
+await websocket.send_json({
+    "tool": "executeJS",
+    "params": {"code": "window.location.href"}
+})
+
+# Browser receives, executes, sends back result
+
+# FastAPI MUST receive the result
+result = await websocket.receive_json()
+# Returns: {"success": true, "data": {"result": "https://..."}, "callId": "..."}
+```
+
+**Why you need `receive_json()`:**
+- Get return values (tab IDs, extracted data, etc.)
+- Know if operation succeeded or failed
+- Make decisions based on results
+- Handle errors gracefully
+
+---
+
+## 📡 WebSocket Message Examples
+
+### Example 1: Create Tab (Need Tab ID!)
+
+**Send:**
+```python
+await websocket.send_json({
+    "tool": "newTab",
+    "params": {"url": "https://github.com"},
+    "callId": "create-github"
+})
+```
+
+**Receive:**
+```python
+result = await websocket.receive_json()
+# Returns:
+{
+    "success": true,
+    "data": {"tabId": 1},  # ← YOU NEED THIS to switch/close the tab later!
+    "callId": "create-github"
+}
+
+# Save the tab ID:
+github_tab = result['data']['tabId']
+```
+
+---
+
+### Example 2: Extract Data from Page
+
+**Send:**
+```python
+await websocket.send_json({
+    "tool": "executeJS",
+    "params": {
+        "code": "document.querySelector('.job-title').textContent"
+    }
+})
+```
+
+**Receive:**
+```python
+result = await websocket.receive_json()
+# Returns:
+{
+    "success": true,
+    "data": {"result": "Senior Software Engineer"},  # ← THE DATA YOU WANTED!
+    "callId": None
+}
+
+job_title = result['data']['result']  # Use the extracted data
+```
+
+---
+
+### Example 3: Fill Form Field
+
+**Send:**
+```python
+await websocket.send_json({
+    "tool": "executeJS",
+    "params": {
+        "code": "document.querySelector('#first_name').value = 'John';"
+    }
+})
+```
+
+**Receive:**
+```python
+result = await websocket.receive_json()
+# Returns:
+{
+    "success": true,
+    "data": {"result": "John"},  # ← Return value of the assignment
+    "callId": None
+}
+
+# Confirms it succeeded
+```
+
+---
+
+### Example 4: Scroll Page
+
+**Send:**
+```python
+await websocket.send_json({
+    "tool": "executeJS",
+    "params": {
+        "code": "window.scrollBy(0, 500);"  # Scroll down 500px
+    }
+})
+```
+
+**Receive:**
+```python
+result = await websocket.receive_json()
+# Returns:
+{
+    "success": true,
+    "data": {"result": undefined},  # scrollBy returns undefined (that's ok!)
+    "callId": None
+}
+```
+
+---
+
+### Example 5: Error Handling
+
+**Send:**
+```python
+await websocket.send_json({
+    "tool": "switchTab",
+    "params": {"tabId": 999}  # Non-existent tab
+})
+```
+
+**Receive:**
+```python
+result = await websocket.receive_json()
+# Returns:
+{
+    "success": false,  # ← FAILED!
+    "error": "Tab not found: 999",
+    "callId": None
+}
+
+# Handle the error:
+if not result['success']:
+    print(f"Error: {result['error']}")
+```
+
+---
+
+## 🎯 Real AI Agent Pattern
+
+```python
+async def intelligent_agent(websocket):
+    # Open job application
+    await websocket.send_json({"tool": "newTab", "params": {"url": "https://jobs.com/apply"}})
+    result = await websocket.receive_json()
+    job_tab = result['data']['tabId']  # ← MUST receive to get tab ID
+    
+    # Switch to it
+    await websocket.send_json({"tool": "switchTab", "params": {"tabId": job_tab}})
+    await websocket.receive_json()  # ← MUST receive (confirms switched)
+    
+    # Wait for page load
+    await asyncio.sleep(2)
+    
+    # Check if form exists
+    await websocket.send_json({
+        "tool": "executeJS",
+        "params": {"code": "document.querySelector('#apply-form') !== null"}
+    })
+    check = await websocket.receive_json()  # ← MUST receive to know if form exists
+    
+    if check['data']['result']:  # ← Make decision based on result
+        # Fill the form
+        await websocket.send_json({
+            "tool": "executeJS",
+            "params": {
+                "code": """
+                    document.querySelector('#first_name').value = 'John';
+                    document.querySelector('#email').value = 'john@test.com';
+                    'filled'
+                """
+            }
+        })
+        fill_result = await websocket.receive_json()  # ← Confirm filled
+        print(f"Form filled: {fill_result['data']['result']}")
+    else:
+        print("Form not found, navigating elsewhere...")
+```
+
+**That's it. Pure tool execution with full visibility.**
 
 ---
 

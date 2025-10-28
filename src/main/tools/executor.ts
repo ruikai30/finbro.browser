@@ -49,10 +49,15 @@ export async function executeTool(call: ToolCall): Promise<ToolResult> {
     switch (tool) {
       case 'newTab':
         result = await tabsManager.createTab(params.url);
-        return { 
-          success: true, 
-          data: { tabId: result }, 
-          callId 
+        // Auto-focus the new tab by default unless explicitly disabled
+        const shouldFocus = params && params.hasOwnProperty('focus') ? params.focus !== false : true;
+        if (shouldFocus) {
+          tabsManager.switchTo(result);
+        }
+        return {
+          success: true,
+          data: { tabId: result },
+          callId
         };
       
       case 'closeTab':
