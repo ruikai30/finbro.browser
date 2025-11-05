@@ -12,6 +12,7 @@ declare global {
         close: (tabId: number) => Promise<void>;
         getCurrent: () => Promise<number>;
         getAll: () => Promise<{ tabs: any[]; currentTabId: number }>;
+        navigate: (tabId: number, url: string) => Promise<void>;
       };
       config: {
         get: () => Promise<{ config: any }>;
@@ -32,7 +33,7 @@ declare global {
 }
 
 // DOM Elements
-const promptInput = document.getElementById('prompt-input') as HTMLInputElement;
+const promptInput = document.getElementById('prompt-input') as HTMLTextAreaElement;
 const btnSend = document.getElementById('btn-send') as HTMLButtonElement;
 const connectionStatus = document.getElementById('connection-status') as HTMLSpanElement;
 const tabBar = document.getElementById('tab-bar') as HTMLDivElement;
@@ -80,10 +81,11 @@ function updateProcessingState(processing: boolean): void {
   btnSend.disabled = processing || !promptInput.value.trim();
   promptInput.disabled = processing;
   
+  // Add/remove processing class for animation
   if (processing) {
-    btnSend.textContent = 'Processing...';
+    btnSend.classList.add('processing');
   } else {
-    btnSend.textContent = 'Send';
+    btnSend.classList.remove('processing');
   }
 }
 
@@ -305,19 +307,11 @@ async function handleTabClose(tabId: number): Promise<void> {
 }
 
 /**
- * Handle new tab
+ * Handle new tab - just opens google
  */
 async function handleNewTab(): Promise<void> {
-  const url = prompt('🌐 Enter website URL:', 'https://google.com');
-  if (!url) return;
-  
-  let fullUrl = url.trim();
-  if (!fullUrl.startsWith('http://') && !fullUrl.startsWith('https://')) {
-    fullUrl = 'https://' + fullUrl;
-  }
-  
   try {
-    const result = await window.Finbro.tabs.create(fullUrl);
+    const result = await window.Finbro.tabs.create('https://google.com');
     await updateTabs();
     await handleTabSwitch(result.tabId);
   } catch (error) {
@@ -347,6 +341,31 @@ async function init(): Promise<void> {
   // Prompt input handlers
   promptInput.addEventListener('keydown', handlePromptKeydown);
   promptInput.addEventListener('input', handlePromptInput);
+  
+  // URL input handler
+  const urlInput = document.getElementById('url-input') as HTMLInputElement;
+  if (urlInput) {
+    urlInput.addEventListener('keydown', async (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        let url = urlInput.value.trim();
+        if (!url) return;
+        
+        if (!url.startsWith('http://') && !url.startsWith('https://')) {
+          url = 'https://' + url;
+        }
+        
+        try {
+          const result = await window.Finbro.tabs.getAll();
+          if (result.currentTabId) {
+            await window.Finbro.tabs.navigate(result.currentTabId, url);
+          }
+        } catch (error) {
+          console.error('[Renderer] Failed to navigate:', error);
+        }
+      }
+    });
+  }
   
   // Initial button state
   btnSend.disabled = true;

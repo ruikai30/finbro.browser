@@ -18,6 +18,7 @@ export enum IpcChannel {
   TABS_CLOSE = 'tabs:close',
   TABS_GET_CURRENT = 'tabs:getCurrent',
   TABS_GET_ALL = 'tabs:getAll',
+  TABS_NAVIGATE = 'tabs:navigate',
   
   // Configuration
   CONFIG_GET = 'config:get',

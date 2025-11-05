@@ -14,6 +14,7 @@ const IpcChannel = {
   TABS_CLOSE: 'tabs:close',
   TABS_GET_CURRENT: 'tabs:getCurrent',
   TABS_GET_ALL: 'tabs:getAll',
+  TABS_NAVIGATE: 'tabs:navigate',
   CONFIG_GET: 'config:get',
   CONFIG_SET: 'config:set',
   TOOLS_EXECUTE: 'tools:execute',
@@ -65,6 +66,13 @@ const finbroApi = {
      */
     getAll: async (): Promise<{ tabs: any[]; currentTabId: number }> => {
       return await ipcRenderer.invoke(IpcChannel.TABS_GET_ALL);
+    },
+    
+    /**
+     * Navigate tab to URL
+     */
+    navigate: async (tabId: number, url: string): Promise<void> => {
+      return await ipcRenderer.invoke(IpcChannel.TABS_NAVIGATE, { tabId, url });
     }
   },
   

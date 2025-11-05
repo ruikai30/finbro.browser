@@ -1,7 +1,7 @@
 # Finbro Browser - Master Documentation
 
-**Version:** 0.1.0  
-**Status:** ✅ Ultra-Lean AI Tool Executor (5 Tools Only)
+**Version:** 0.2.0  
+**Status:** ✅ Ultra-Lean AI Tool Executor with Glassmorphism UI
 
 ---
 
@@ -14,6 +14,7 @@
 - AI Agent = All intelligence (your FastAPI)
 - 5 essential tools only
 - Everything else via `executeJS`
+- **NEW:** Glassmorphism UI with right sidebar AI chat
 
 ---
 
@@ -29,6 +30,7 @@ Browser (This App)
   - WebSocket Client
   - 5 Tools
   - Execute & return
+  - Glassmorphism Chat Sidebar
 ```
 
 ---
@@ -44,7 +46,7 @@ finbro.browser/
 ├── tsconfig.json
 ├── .gitignore
 │
-└── src/ (15 files, 1,857 lines)
+└── src/ (15 files)
     ├── main/ (6 files)
     │   ├── main.ts
     │   ├── windows.ts
@@ -58,9 +60,9 @@ finbro.browser/
     ├── preload/
     │   └── preload.ts
     ├── renderer/
-    │   ├── index.html
+    │   ├── index.html (Glassmorphism Layout)
     │   ├── index.ts
-    │   └── styles.css
+    │   └── styles.css (Vibrancy & Depth)
     └── types/
         ├── tool.types.ts
         ├── config.types.ts
@@ -69,15 +71,41 @@ finbro.browser/
 
 ---
 
-## 🎨 UI
+## 🎨 UI Design
+
+**Style:** Glassmorphism with Vibrancy and Depth  
+**Layout:** Right Sidebar Chat (Perplexity/Cursor/VS Code Copilot style)
 
 ```
-┌────────────────────────────────────┐
-│ [🚀 finbro.me ✕]              [+] │ ← Tabs
-├────────────────────────────────────┤
-│                  [Disconnected]    │ ← ONE button
-├────────────────────────────────────┤
-│       finbro.me content            │
+┌────────────────────────────────┬──────────────────┐
+│ [🚀 finbro.me ✕]          [+] │  AI Assistant    │
+├────────────────────────────────┤  [Connected ✅]  │
+│                                │──────────────────│
+│                                │  🤖 Jobs Agent ▾ │
+│                                │──────────────────│
+│                                │                  │
+│    finbro.me content           │  [Chat Input]    │
+│    (BrowserView)               │                  │
+│                                │                  │
+│                                │  [   Send   ]    │
+└────────────────────────────────┴──────────────────┘
+     ← 40px toolbar                 380px sidebar →
+```
+
+**Features:**
+- **Glassmorphism:** Frosted glass effect with blur and transparency
+- **Agent Selector:** Dropdown for Jobs/People/Apply agents (pseudo UI)
+- **Chat Input:** Multi-line textarea with smooth focus effects
+- **Send Button:** Gradient purple with hover animations
+- **Connection Badge:** Color-coded status indicator
+- **Responsive:** Sidebar scales on smaller screens
+
+**Dimensions:**
+- Toolbar Height: `40px` (tabs only, no controls)
+- Sidebar Width: `380px` (glassmorphism panel)
+- Content Area: Dynamic (window - toolbar - sidebar)
+
+
 └────────────────────────────────────┘
 ```
 

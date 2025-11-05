@@ -28,10 +28,14 @@ export class TabsManager {
   private nextId: number = 0;
   private window: BrowserWindow;
   private toolbarHeight: number;
+  private sidebarWidth: number;
+  private urlbarHeight: number;
 
-  constructor(window: BrowserWindow, toolbarHeight: number = 100) {
+  constructor(window: BrowserWindow, toolbarHeight: number = 40, sidebarWidth: number = 380, urlbarHeight: number = 36) {
     this.window = window;
     this.toolbarHeight = toolbarHeight;
+    this.sidebarWidth = sidebarWidth;
+    this.urlbarHeight = urlbarHeight;
   }
 
   /**
@@ -197,6 +201,24 @@ export class TabsManager {
   }
 
   /**
+   * Navigate tab to new URL
+   */
+  async navigateTab(tabId: number, url: string): Promise<void> {
+    const tab = this.getTab(tabId);
+    if (!tab) {
+      console.error('[Tabs] Tab not found:', tabId);
+      return;
+    }
+    
+    tab.url = url;
+    await tab.view.webContents.loadURL(url);
+    
+    if (getConfigValue('debugMode')) {
+      console.log('[Tabs] Navigated tab', tabId, 'to:', url);
+    }
+  }
+
+  /**
    * Execute JavaScript code in a tab's context
    * @param tabId - Tab ID
    * @param code - JavaScript code to execute
@@ -230,11 +252,12 @@ export class TabsManager {
     const width = contentSize[0] || 1024;
     const height = contentSize[1] || 768;
     
+    // Account for toolbar + URL bar at top and sidebar on right
     tab.view.setBounds({
       x: 0,
-      y: this.toolbarHeight,
-      width: width,
-      height: height - this.toolbarHeight
+      y: this.toolbarHeight + this.urlbarHeight,
+      width: width - this.sidebarWidth,
+      height: height - this.toolbarHeight - this.urlbarHeight
     });
   }
 
@@ -303,8 +326,10 @@ export class TabsManager {
  */
 export function createTabsManager(
   window: BrowserWindow,
-  toolbarHeight?: number
+  toolbarHeight?: number,
+  sidebarWidth?: number,
+  urlbarHeight?: number
 ): TabsManager {
-  return new TabsManager(window, toolbarHeight);
+  return new TabsManager(window, toolbarHeight, sidebarWidth, urlbarHeight);
 }
 

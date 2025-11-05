@@ -48,6 +48,7 @@ export function registerIpcHandlers(): void {
   ipcMain.handle(IpcChannel.TABS_CLOSE, handleTabClose);
   ipcMain.handle(IpcChannel.TABS_GET_CURRENT, handleTabGetCurrent);
   ipcMain.handle(IpcChannel.TABS_GET_ALL, handleTabGetAll);
+  ipcMain.handle(IpcChannel.TABS_NAVIGATE, handleTabNavigate);
   
   // Configuration
   ipcMain.handle(IpcChannel.CONFIG_GET, handleConfigGet);
@@ -118,6 +119,19 @@ async function handleTabGetCurrent(
   }
   
   return tabsManager.getCurrentTabId();
+}
+
+async function handleTabNavigate(
+  event: IpcMainInvokeEvent,
+  args: { tabId: number; url: string }
+): Promise<void> {
+  if (!tabsManager) {
+    throw new Error('TabsManager not initialized');
+  }
+  
+  console.log('[IPC] tabs:navigate -', args.tabId, args.url);
+  
+  await tabsManager.navigateTab(args.tabId, args.url);
 }
 
 async function handleTabGetAll(

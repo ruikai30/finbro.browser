@@ -8,30 +8,56 @@
   <link rel="stylesheet" href="./styles.css">
 </head>
 <body>
-  <!-- Toolbar Container -->
+  <!-- Top Toolbar (Tabs + URL Bar) -->
   <header class="toolbar">
-    <!-- Tab Bar (Chrome-style tabs) -->
     <div class="tab-bar" id="tab-bar">
       <!-- Tabs dynamically rendered here -->
     </div>
-    
-    <!-- Controls Bar (Chat Interface) -->
-    <div class="controls-bar">
-      <input 
-        type="text" 
-        id="prompt-input" 
-        class="prompt-input" 
-        placeholder="Type your prompt here..." 
-        autocomplete="off"
-      />
-      <button id="btn-send" class="btn btn-send" title="Send prompt to AI Agent">
-        Send
-      </button>
-      <span id="connection-status" class="connection-status">Disconnected</span>
-    </div>
   </header>
   
-  <!-- Tab content renders below via BrowserViews -->
+  <!-- URL Bar -->
+  <div class="url-bar">
+    <input type="text" id="url-input" class="url-input" placeholder="Enter URL and press Enter...">
+  </div>
+  
+  <!-- Right Sidebar AI Chat (Glassmorphism) -->
+  <aside class="ai-sidebar">
+    <!-- Connection Status Badge -->
+    <div class="sidebar-header">
+      <div class="sidebar-title">AI Assistant</div>
+      <span id="connection-status" class="connection-badge">Disconnected</span>
+    </div>
+    
+    <!-- Agent Selector (Pseudo Dropdown) -->
+    <div class="agent-selector">
+      <div class="agent-dropdown">
+        <span class="agent-icon">🤖</span>
+        <select id="agent-type" class="agent-select">
+          <option value="jobs">Jobs Agent</option>
+          <option value="people">People Agent</option>
+          <option value="apply">Apply Agent</option>
+        </select>
+      </div>
+    </div>
+    
+    <!-- Chat Input Area -->
+    <div class="chat-input-container">
+      <textarea 
+        id="prompt-input" 
+        class="chat-textarea" 
+        placeholder="Ask me anything..." 
+        rows="3"
+        autocomplete="off"
+      ></textarea>
+      <button id="btn-send" class="send-button" title="Send prompt to AI Agent">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/>
+        </svg>
+      </button>
+    </div>
+  </aside>
+  
+  <!-- Tab content renders in remaining space via BrowserViews -->
   
   <script src="./index.js"></script>
 </body>
