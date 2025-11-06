@@ -28,6 +28,11 @@ declare global {
         status: () => Promise<{ state: string }>;
         sendPrompt: (prompt: string) => Promise<void>;
       };
+      cdp: {
+        connect: () => Promise<void>;
+        disconnect: () => Promise<void>;
+        status: () => Promise<{ state: string }>;
+      };
     };
   }
 }
@@ -38,10 +43,15 @@ const btnSend = document.getElementById('btn-send') as HTMLButtonElement;
 const connectionStatus = document.getElementById('connection-status') as HTMLSpanElement;
 const tabBar = document.getElementById('tab-bar') as HTMLDivElement;
 
+// CDP DOM Elements
+const btnCdpConnect = document.getElementById('btn-cdp-connect') as HTMLButtonElement;
+const cdpStatus = document.getElementById('cdp-status') as HTMLSpanElement;
+
 // State
 let currentTabId: number = -1;
 let tabs: Array<{ id: number; url: string; title?: string }> = [];
 let connectionState: string = 'disconnected';
+let cdpConnectionState: string = 'disconnected';
 let isProcessing: boolean = false;
 
 /**
@@ -69,6 +79,44 @@ function updateConnectionStatus(state: string): void {
     case 'disconnected':
     default:
       connectionStatus.textContent = 'Disconnected';
+      break;
+  }
+}
+
+/**
+ * Update CDP connection status display
+ */
+function updateCdpStatus(state: string): void {
+  cdpConnectionState = state;
+  
+  // Remove all state classes
+  cdpStatus.classList.remove('connected', 'connecting', 'error');
+  
+  switch (state) {
+    case 'connected':
+      cdpStatus.textContent = 'Connected ✅';
+      cdpStatus.classList.add('connected');
+      btnCdpConnect.textContent = 'Disconnect';
+      btnCdpConnect.classList.add('connected');
+      break;
+    case 'connecting':
+      cdpStatus.textContent = 'Connecting...';
+      cdpStatus.classList.add('connecting');
+      btnCdpConnect.disabled = true;
+      break;
+    case 'error':
+      cdpStatus.textContent = 'Error ❌';
+      cdpStatus.classList.add('error');
+      btnCdpConnect.textContent = 'Retry';
+      btnCdpConnect.disabled = false;
+      btnCdpConnect.classList.remove('connected');
+      break;
+    case 'disconnected':
+    default:
+      cdpStatus.textContent = 'Disconnected';
+      btnCdpConnect.textContent = 'Connect to API';
+      btnCdpConnect.disabled = false;
+      btnCdpConnect.classList.remove('connected');
       break;
   }
 }
@@ -332,6 +380,43 @@ async function pollBridgeStatus(): Promise<void> {
 }
 
 /**
+ * Poll CDP status
+ */
+async function pollCdpStatus(): Promise<void> {
+  try {
+    const { state } = await window.Finbro.cdp.status();
+    updateCdpStatus(state);
+  } catch (error) {
+    // Silently fail
+  }
+}
+
+/**
+ * Handle CDP connect/disconnect button click
+ */
+async function handleCdpConnectClick(): Promise<void> {
+  try {
+    if (cdpConnectionState === 'connected') {
+      // Disconnect
+      await window.Finbro.cdp.disconnect();
+      updateCdpStatus('disconnected');
+    } else {
+      // Connect
+      updateCdpStatus('connecting');
+      await window.Finbro.cdp.connect();
+      
+      // Wait a bit and check status
+      await new Promise(resolve => setTimeout(resolve, 500));
+      const { state } = await window.Finbro.cdp.status();
+      updateCdpStatus(state);
+    }
+  } catch (error) {
+    console.error('[Renderer] CDP connection error:', error);
+    updateCdpStatus('error');
+  }
+}
+
+/**
  * Initialize
  */
 async function init(): Promise<void> {
@@ -341,6 +426,9 @@ async function init(): Promise<void> {
   // Prompt input handlers
   promptInput.addEventListener('keydown', handlePromptKeydown);
   promptInput.addEventListener('input', handlePromptInput);
+  
+  // CDP connect button handler
+  btnCdpConnect.addEventListener('click', handleCdpConnectClick);
   
   // URL input handler
   const urlInput = document.getElementById('url-input') as HTMLInputElement;
@@ -379,8 +467,12 @@ async function init(): Promise<void> {
   // Poll for bridge status (2 seconds)
   setInterval(pollBridgeStatus, 2000);
   
-  // Initial status check
+  // Poll for CDP status (2 seconds)
+  setInterval(pollCdpStatus, 2000);
+  
+  // Initial status checks
   pollBridgeStatus();
+  pollCdpStatus();
 }
 
 // Start when DOM ready

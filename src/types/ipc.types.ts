@@ -33,6 +33,11 @@ export enum IpcChannel {
   BRIDGE_DISCONNECT = 'bridge:disconnect',
   BRIDGE_STATUS = 'bridge:status',
   BRIDGE_SEND_PROMPT = 'bridge:sendPrompt',
+  
+  // CDP WebSocket Client Controls
+  CDP_CONNECT = 'cdp:connect',
+  CDP_DISCONNECT = 'cdp:disconnect',
+  CDP_STATUS = 'cdp:status',
 }
 
 /**

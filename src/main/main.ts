@@ -10,6 +10,7 @@ import { createMainWindow } from './windows';
 import { registerIpcHandlers } from './ipc';
 import { getConfig } from './config';
 import { initAgentBridge } from './agent-bridge';
+import { initCdpClient } from './cdp-client';
 
 console.log('='.repeat(60));
 console.log('Finbro Browser - Starting');
@@ -45,6 +46,12 @@ app.whenReady().then(async () => {
     token: config.agentToken,
     autoReconnect: true,
     reconnectInterval: 5000
+  });
+  
+  // Initialize CDP client (but don't auto-connect)
+  console.log('[Main] Initializing CDP client (manual connect only)...');
+  initCdpClient({
+    url: config.cdpWebSocketUrl
   });
   
   console.log('[Main] Initialization complete');

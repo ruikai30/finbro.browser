@@ -21,6 +21,10 @@ export interface AppConfig {
   agentBridgeEnabled: boolean;
   agentBridgeUrl: string;
   agentToken: string;
+  
+  // CDP WebSocket Client (API Control)
+  cdpEnabled: boolean;
+  cdpWebSocketUrl: string;
 }
 
 /**
@@ -32,6 +36,8 @@ export const DEFAULT_CONFIG: AppConfig = {
   toolbarHeight: 100,
   agentBridgeEnabled: false,
   agentBridgeUrl: 'ws://127.0.0.1:8000/browseragent/ws',
-  agentToken: 'test-token-123'
+  agentToken: 'test-token-123',
+  cdpEnabled: false,
+  cdpWebSocketUrl: 'ws://127.0.0.1:8000/ws/browser'
 };
 

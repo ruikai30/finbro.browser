@@ -13,6 +13,7 @@ import { ToolCall } from '../types/tool.types';
 import { executeTool, setTabsManagerGetter } from './tools/executor';
 import { getAllToolDefinitions } from './tools/registry';
 import { getAgentBridge } from './agent-bridge';
+import { getCdpClient } from './cdp-client';
 
 // TabsManager instance (set by windows.ts)
 let tabsManager: TabsManager | null = null;
@@ -63,6 +64,11 @@ export function registerIpcHandlers(): void {
   ipcMain.handle(IpcChannel.BRIDGE_DISCONNECT, handleBridgeDisconnect);
   ipcMain.handle(IpcChannel.BRIDGE_STATUS, handleBridgeStatus);
   ipcMain.handle(IpcChannel.BRIDGE_SEND_PROMPT, handleBridgeSendPrompt);
+  
+  // CDP WebSocket Client Controls
+  ipcMain.handle(IpcChannel.CDP_CONNECT, handleCdpConnect);
+  ipcMain.handle(IpcChannel.CDP_DISCONNECT, handleCdpDisconnect);
+  ipcMain.handle(IpcChannel.CDP_STATUS, handleCdpStatus);
   
   console.log('[IPC] All handlers registered');
 }
@@ -232,4 +238,35 @@ async function handleBridgeSendPrompt(
   
   bridge.sendPrompt(args.prompt);
 }
+
+/**
+ * CDP WebSocket Client Control Handlers
+ */
+
+async function handleCdpConnect(
+  event: IpcMainInvokeEvent
+): Promise<void> {
+  const cdpClient = getCdpClient();
+  if (cdpClient) {
+    await cdpClient.connect();
+  }
+}
+
+async function handleCdpDisconnect(
+  event: IpcMainInvokeEvent
+): Promise<void> {
+  const cdpClient = getCdpClient();
+  if (cdpClient) {
+    cdpClient.disconnect();
+  }
+}
+
+async function handleCdpStatus(
+  event: IpcMainInvokeEvent
+): Promise<{ state: string }> {
+  const cdpClient = getCdpClient();
+  const state = cdpClient ? cdpClient.getState() : 'disconnected';
+  return { state };
+}
+
 

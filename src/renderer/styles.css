@@ -232,6 +232,32 @@ body {
   overflow: hidden;
 }
 
+/* Sidebar Sections */
+.sidebar-section {
+  display: flex;
+  flex-direction: column;
+}
+
+.agent-section {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.cdp-section {
+  flex: 0 0 auto;
+  padding-bottom: 20px;
+}
+
+.sidebar-divider {
+  height: 1px;
+  background: linear-gradient(90deg, 
+    transparent 0%, 
+    rgba(0, 0, 0, 0.1) 50%, 
+    transparent 100%);
+  margin: 0 24px;
+}
+
 /* Sidebar Header */
 .sidebar-header {
   padding: 20px 24px;
@@ -456,4 +482,62 @@ body {
   :root {
     --sidebar-width: 280px;
   }
+}
+
+/* ============================================================
+   CDP CONNECTION SECTION
+   ============================================================ */
+
+.cdp-info {
+  padding: 12px 24px;
+}
+
+.cdp-endpoint {
+  font-size: 11px;
+  font-family: 'SF Mono', 'Monaco', 'Courier New', monospace;
+  color: var(--finbro-grey);
+  background: rgba(0, 0, 0, 0.04);
+  padding: 8px 12px;
+  border-radius: 8px;
+  word-break: break-all;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.cdp-connect-button {
+  margin: 0 24px;
+  padding: 12px 20px;
+  background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+  border: none;
+  border-radius: 10px;
+  color: var(--finbro-white);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  width: calc(100% - 48px);
+}
+
+.cdp-connect-button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.cdp-connect-button:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+}
+
+.cdp-connect-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none !important;
+}
+
+.cdp-connect-button.connected {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+}
+
+.cdp-connect-button.connected:hover {
+  background: linear-gradient(135deg, #059669 0%, #047857 100%);
 }

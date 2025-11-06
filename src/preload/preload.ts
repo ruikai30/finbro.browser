@@ -22,6 +22,9 @@ const IpcChannel = {
   BRIDGE_CONNECT: 'bridge:connect',
   BRIDGE_DISCONNECT: 'bridge:disconnect',
   BRIDGE_STATUS: 'bridge:status',
+  CDP_CONNECT: 'cdp:connect',
+  CDP_DISCONNECT: 'cdp:disconnect',
+  CDP_STATUS: 'cdp:status',
 } as const;
 
 /**
@@ -145,6 +148,32 @@ const finbroApi = {
     sendPrompt: async (prompt: string): Promise<void> => {
       // Using string literal due to TypeScript enum resolution issue
       return await ipcRenderer.invoke('bridge:sendPrompt', { prompt });
+    }
+  },
+  
+  /**
+   * CDP WebSocket Client Controls
+   */
+  cdp: {
+    /**
+     * Connect to CDP WebSocket server
+     */
+    connect: async (): Promise<void> => {
+      return await ipcRenderer.invoke(IpcChannel.CDP_CONNECT);
+    },
+    
+    /**
+     * Disconnect from CDP WebSocket server
+     */
+    disconnect: async (): Promise<void> => {
+      return await ipcRenderer.invoke(IpcChannel.CDP_DISCONNECT);
+    },
+    
+    /**
+     * Get CDP connection status
+     */
+    status: async (): Promise<{ state: string }> => {
+      return await ipcRenderer.invoke(IpcChannel.CDP_STATUS);
     }
   }
 };
