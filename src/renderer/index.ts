@@ -1,6 +1,6 @@
 /**
  * Renderer Process
- * Ultra-lean: Only tab rendering and bridge connection control
+ * Minimal UI: Tab rendering and CDP autofill connection control
  */
 
 declare global {
@@ -22,12 +22,6 @@ declare global {
         execute: (call: any) => Promise<any>;
         getAll: () => Promise<{ tools: any[] }>;
       };
-      bridge: {
-        connect: () => Promise<void>;
-        disconnect: () => Promise<void>;
-        status: () => Promise<{ state: string }>;
-        sendPrompt: (prompt: string) => Promise<void>;
-      };
       cdp: {
         connect: () => Promise<void>;
         disconnect: () => Promise<void>;
@@ -38,181 +32,40 @@ declare global {
 }
 
 // DOM Elements
-const promptInput = document.getElementById('prompt-input') as HTMLTextAreaElement;
-const btnSend = document.getElementById('btn-send') as HTMLButtonElement;
-const connectionStatus = document.getElementById('connection-status') as HTMLSpanElement;
 const tabBar = document.getElementById('tab-bar') as HTMLDivElement;
-
-// CDP DOM Elements
-const btnCdpConnect = document.getElementById('btn-cdp-connect') as HTMLButtonElement;
-const cdpStatus = document.getElementById('cdp-status') as HTMLSpanElement;
+const btnAutofill = document.getElementById('btn-autofill') as HTMLButtonElement;
+const autofillStatus = document.getElementById('autofill-status') as HTMLSpanElement;
+const urlInput = document.getElementById('url-input') as HTMLInputElement;
 
 // State
 let currentTabId: number = -1;
 let tabs: Array<{ id: number; url: string; title?: string }> = [];
-let connectionState: string = 'disconnected';
 let cdpConnectionState: string = 'disconnected';
-let isProcessing: boolean = false;
 
 /**
- * Update connection status display
+ * Update Autofill button status display
  */
-function updateConnectionStatus(state: string): void {
-  connectionState = state;
-  
-  // Remove all state classes
-  connectionStatus.classList.remove('connected', 'connecting', 'error');
-  
-  switch (state) {
-    case 'connected':
-      connectionStatus.textContent = 'Connected ✅';
-      connectionStatus.classList.add('connected');
-      break;
-    case 'connecting':
-      connectionStatus.textContent = 'Connecting...';
-      connectionStatus.classList.add('connecting');
-      break;
-    case 'error':
-      connectionStatus.textContent = 'Error ❌';
-      connectionStatus.classList.add('error');
-      break;
-    case 'disconnected':
-    default:
-      connectionStatus.textContent = 'Disconnected';
-      break;
-  }
-}
-
-/**
- * Update CDP connection status display
- */
-function updateCdpStatus(state: string): void {
+function updateAutofillStatus(state: string): void {
   cdpConnectionState = state;
   
   // Remove all state classes
-  cdpStatus.classList.remove('connected', 'connecting', 'error');
+  btnAutofill.classList.remove('connected', 'connecting', 'error');
   
   switch (state) {
     case 'connected':
-      cdpStatus.textContent = 'Connected ✅';
-      cdpStatus.classList.add('connected');
-      btnCdpConnect.textContent = 'Disconnect';
-      btnCdpConnect.classList.add('connected');
+      btnAutofill.classList.add('connected');
       break;
     case 'connecting':
-      cdpStatus.textContent = 'Connecting...';
-      cdpStatus.classList.add('connecting');
-      btnCdpConnect.disabled = true;
+      btnAutofill.classList.add('connecting');
       break;
     case 'error':
-      cdpStatus.textContent = 'Error ❌';
-      cdpStatus.classList.add('error');
-      btnCdpConnect.textContent = 'Retry';
-      btnCdpConnect.disabled = false;
-      btnCdpConnect.classList.remove('connected');
+      btnAutofill.classList.add('error');
       break;
     case 'disconnected':
     default:
-      cdpStatus.textContent = 'Disconnected';
-      btnCdpConnect.textContent = 'Connect to API';
-      btnCdpConnect.disabled = false;
-      btnCdpConnect.classList.remove('connected');
+      // Default state
       break;
   }
-}
-
-/**
- * Update UI based on processing state
- */
-function updateProcessingState(processing: boolean): void {
-  isProcessing = processing;
-  btnSend.disabled = processing || !promptInput.value.trim();
-  promptInput.disabled = processing;
-  
-  // Add/remove processing class for animation
-  if (processing) {
-    btnSend.classList.add('processing');
-  } else {
-    btnSend.classList.remove('processing');
-  }
-}
-
-/**
- * Send prompt to AI agent
- */
-async function sendPrompt(): Promise<void> {
-  const prompt = promptInput.value.trim();
-  
-  if (!prompt || isProcessing) {
-    return;
-  }
-  
-  try {
-    updateProcessingState(true);
-    
-    // Auto-connect if not connected
-    if (connectionState !== 'connected') {
-      console.log('[Renderer] Auto-connecting to agent...');
-      updateConnectionStatus('connecting');
-      await window.Finbro.bridge.connect();
-      
-      // Wait for connection to establish
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      const { state } = await window.Finbro.bridge.status();
-      updateConnectionStatus(state);
-      
-      if (state !== 'connected') {
-        throw new Error('Failed to connect to agent');
-      }
-    }
-    
-    // Send prompt
-    console.log('[Renderer] Sending prompt:', prompt);
-    await window.Finbro.bridge.sendPrompt(prompt);
-    
-    // Clear input
-    promptInput.value = '';
-    
-    // Reset processing state after a delay (agent will handle the work)
-    // The agent processes autonomously - we just send the prompt and done
-    setTimeout(() => {
-      updateProcessingState(false);
-    }, 2000);
-    
-  } catch (error) {
-    console.error('[Renderer] Failed to send prompt:', error);
-    updateConnectionStatus('error');
-    updateProcessingState(false);
-    
-    // Show error in a non-blocking way
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-    console.error('[Renderer] Error details:', errorMessage);
-  }
-}
-
-/**
- * Handle send button click
- */
-async function handleSendClick(): Promise<void> {
-  await sendPrompt();
-}
-
-/**
- * Handle Enter key in prompt input
- */
-function handlePromptKeydown(event: KeyboardEvent): void {
-  if (event.key === 'Enter' && !event.shiftKey) {
-    event.preventDefault();
-    sendPrompt();
-  }
-}
-
-/**
- * Handle input changes (enable/disable send button)
- */
-function handlePromptInput(): void {
-  btnSend.disabled = !promptInput.value.trim() || isProcessing;
 }
 
 /**
@@ -228,7 +81,7 @@ function getFaviconForUrl(url: string): string {
     if (hostname.includes('google')) return '🔍';
     if (hostname.includes('github')) return '💻';
     if (hostname.includes('greenhouse')) return '💼';
-    if (hostname.includes('example')) return '📄';
+    if (hostname.includes('example')) return '��';
     
     return '🌐';
   } catch (e) {
@@ -355,7 +208,7 @@ async function handleTabClose(tabId: number): Promise<void> {
 }
 
 /**
- * Handle new tab - just opens google
+ * Handle new tab
  */
 async function handleNewTab(): Promise<void> {
   try {
@@ -368,14 +221,23 @@ async function handleNewTab(): Promise<void> {
 }
 
 /**
- * Poll bridge status
+ * Handle URL navigation
  */
-async function pollBridgeStatus(): Promise<void> {
+async function handleUrlNavigation(): Promise<void> {
+  let url = urlInput.value.trim();
+  if (!url) return;
+  
+  if (!url.startsWith('http://') && !url.startsWith('https://')) {
+    url = 'https://' + url;
+  }
+  
   try {
-    const { state } = await window.Finbro.bridge.status();
-    updateConnectionStatus(state);
+    const result = await window.Finbro.tabs.getAll();
+    if (result.currentTabId !== undefined && result.currentTabId >= 0) {
+      await window.Finbro.tabs.navigate(result.currentTabId, url);
+    }
   } catch (error) {
-    // Silently fail
+    console.error('[Renderer] Failed to navigate:', error);
   }
 }
 
@@ -385,34 +247,34 @@ async function pollBridgeStatus(): Promise<void> {
 async function pollCdpStatus(): Promise<void> {
   try {
     const { state } = await window.Finbro.cdp.status();
-    updateCdpStatus(state);
+    updateAutofillStatus(state);
   } catch (error) {
     // Silently fail
   }
 }
 
 /**
- * Handle CDP connect/disconnect button click
+ * Handle Autofill button click (toggle CDP connection)
  */
-async function handleCdpConnectClick(): Promise<void> {
+async function handleAutofillClick(): Promise<void> {
   try {
     if (cdpConnectionState === 'connected') {
       // Disconnect
       await window.Finbro.cdp.disconnect();
-      updateCdpStatus('disconnected');
+      updateAutofillStatus('disconnected');
     } else {
       // Connect
-      updateCdpStatus('connecting');
+      updateAutofillStatus('connecting');
       await window.Finbro.cdp.connect();
       
       // Wait a bit and check status
       await new Promise(resolve => setTimeout(resolve, 500));
       const { state } = await window.Finbro.cdp.status();
-      updateCdpStatus(state);
+      updateAutofillStatus(state);
     }
   } catch (error) {
     console.error('[Renderer] CDP connection error:', error);
-    updateCdpStatus('error');
+    updateAutofillStatus('error');
   }
 }
 
@@ -420,43 +282,16 @@ async function handleCdpConnectClick(): Promise<void> {
  * Initialize
  */
 async function init(): Promise<void> {
-  // Send button handler
-  btnSend.addEventListener('click', handleSendClick);
-  
-  // Prompt input handlers
-  promptInput.addEventListener('keydown', handlePromptKeydown);
-  promptInput.addEventListener('input', handlePromptInput);
-  
-  // CDP connect button handler
-  btnCdpConnect.addEventListener('click', handleCdpConnectClick);
+  // Autofill button handler
+  btnAutofill.addEventListener('click', handleAutofillClick);
   
   // URL input handler
-  const urlInput = document.getElementById('url-input') as HTMLInputElement;
-  if (urlInput) {
-    urlInput.addEventListener('keydown', async (e) => {
-      if (e.key === 'Enter') {
-        e.preventDefault();
-        let url = urlInput.value.trim();
-        if (!url) return;
-        
-        if (!url.startsWith('http://') && !url.startsWith('https://')) {
-          url = 'https://' + url;
-        }
-        
-        try {
-          const result = await window.Finbro.tabs.getAll();
-          if (result.currentTabId) {
-            await window.Finbro.tabs.navigate(result.currentTabId, url);
-          }
-        } catch (error) {
-          console.error('[Renderer] Failed to navigate:', error);
-        }
-      }
-    });
-  }
-  
-  // Initial button state
-  btnSend.disabled = true;
+  urlInput.addEventListener('keydown', async (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      await handleUrlNavigation();
+    }
+  });
   
   // Load tabs
   await updateTabs();
@@ -464,14 +299,10 @@ async function init(): Promise<void> {
   // Poll for tab updates (1 second)
   setInterval(updateTabs, 1000);
   
-  // Poll for bridge status (2 seconds)
-  setInterval(pollBridgeStatus, 2000);
-  
   // Poll for CDP status (2 seconds)
   setInterval(pollCdpStatus, 2000);
   
-  // Initial status checks
-  pollBridgeStatus();
+  // Initial status check
   pollCdpStatus();
 }
 

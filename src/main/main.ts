@@ -9,7 +9,6 @@ import { app, BrowserWindow } from 'electron';
 import { createMainWindow } from './windows';
 import { registerIpcHandlers } from './ipc';
 import { getConfig } from './config';
-import { initAgentBridge } from './agent-bridge';
 import { initCdpClient } from './cdp-client';
 
 console.log('='.repeat(60));
@@ -31,22 +30,13 @@ app.whenReady().then(async () => {
   const config = getConfig();
   console.log('[Main] Debug mode:', config.debugMode);
   console.log('[Main] Startup tabs:', config.startupTabs.length);
-  console.log('[Main] Agent bridge:', config.agentBridgeEnabled ? 'enabled' : 'disabled');
+  console.log('[Main] CDP client:', config.cdpEnabled ? 'enabled' : 'disabled');
   
   // Register IPC handlers
   registerIpcHandlers();
   
   // Create main window
   await createMainWindow();
-  
-  // Initialize agent bridge (but don't auto-connect)
-  console.log('[Main] Initializing agent bridge (manual connect only)...');
-  initAgentBridge({
-    url: config.agentBridgeUrl,
-    token: config.agentToken,
-    autoReconnect: true,
-    reconnectInterval: 5000
-  });
   
   // Initialize CDP client (but don't auto-connect)
   console.log('[Main] Initializing CDP client (manual connect only)...');

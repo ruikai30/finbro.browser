@@ -1,7 +1,6 @@
 /**
  * Finbro Browser - UI Styles
- * Design System: Glassmorphism with Vibrancy and Depth
- * Layout: Right Sidebar AI Chat (Perplexity/Cursor style)
+ * Design System: Clean, minimal UI with full-width layout
  * Brand Colors: Purple (#290E99), Grey (#848484), Light Grey (#D8D8D8), Black, White
  */
 
@@ -12,9 +11,6 @@
   --finbro-purple-light: #3a1acc;
   --finbro-grey: #848484;
   --finbro-light-grey: #D8D8D8;
-  --finbro-glass-bg: rgba(255, 255, 255, 0.85);
-  --finbro-glass-border: rgba(255, 255, 255, 0.25);
-  --sidebar-width: 380px;
   --toolbar-height: 40px;
   --urlbar-height: 36px;
 }
@@ -32,19 +28,21 @@ body {
 }
 
 /* ============================================================
-   TOP TOOLBAR (Tabs Only)
+   TOP TOOLBAR (Tabs + Autofill Button)
    ============================================================ */
 
 .toolbar {
   position: fixed;
   top: 0;
   left: 0;
-  right: var(--sidebar-width);
+  right: 0;
   height: var(--toolbar-height);
   background: var(--finbro-white);
   border-bottom: 1px solid var(--finbro-light-grey);
   z-index: 100;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  display: flex;
+  align-items: center;
 }
 
 /* URL Bar */
@@ -52,7 +50,7 @@ body {
   position: fixed;
   top: var(--toolbar-height);
   left: 0;
-  right: var(--sidebar-width);
+  right: 0;
   height: var(--urlbar-height);
   background: var(--finbro-white);
   border-bottom: 1px solid var(--finbro-light-grey);
@@ -76,6 +74,7 @@ body {
 
 /* Tab Bar */
 .tab-bar {
+  flex: 1;
   height: 100%;
   background: var(--finbro-light-grey);
   display: flex;
@@ -211,250 +210,64 @@ body {
 }
 
 /* ============================================================
-   RIGHT SIDEBAR - AI CHAT (Glassmorphism)
+   AUTOFILL BUTTON
    ============================================================ */
 
-.ai-sidebar {
-  position: fixed;
-  top: 0;
-  right: 0;
-  width: var(--sidebar-width);
-  height: 100vh;
-  background: var(--finbro-glass-bg);
-  backdrop-filter: blur(20px) saturate(180%);
-  -webkit-backdrop-filter: blur(20px) saturate(180%);
-  border-left: 1px solid var(--finbro-glass-border);
-  box-shadow: -4px 0 24px rgba(0, 0, 0, 0.08), 
-              -2px 0 8px rgba(0, 0, 0, 0.04);
-  display: flex;
-  flex-direction: column;
-  z-index: 200;
-  overflow: hidden;
-}
-
-/* Sidebar Sections */
-.sidebar-section {
-  display: flex;
-  flex-direction: column;
-}
-
-.agent-section {
-  flex: 1;
-  min-height: 0;
-  overflow-y: auto;
-}
-
-.cdp-section {
-  flex: 0 0 auto;
-  padding-bottom: 20px;
-}
-
-.sidebar-divider {
-  height: 1px;
-  background: linear-gradient(90deg, 
-    transparent 0%, 
-    rgba(0, 0, 0, 0.1) 50%, 
-    transparent 100%);
-  margin: 0 24px;
-}
-
-/* Sidebar Header */
-.sidebar-header {
-  padding: 20px 24px;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
-  background: rgba(255, 255, 255, 0.6);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.sidebar-title {
-  font-size: 16px;
+.autofill-button {
+  height: 32px;
+  padding: 0 16px;
+  margin-right: 12px;
+  background: linear-gradient(135deg, var(--finbro-purple) 0%, var(--finbro-purple-light) 100%);
+  border: none;
+  border-radius: 8px;
+  color: var(--finbro-white);
+  font-size: 13px;
   font-weight: 600;
-  color: var(--finbro-black);
-  letter-spacing: -0.3px;
-}
-
-.connection-badge {
-  font-size: 11px;
-  font-weight: 500;
-  padding: 4px 10px;
-  border-radius: 12px;
-  background: rgba(132, 132, 132, 0.15);
-  color: var(--finbro-grey);
-  backdrop-filter: blur(10px);
-  transition: all 0.2s ease;
-}
-
-.connection-badge.connected {
-  background: rgba(16, 185, 129, 0.15);
-  color: #10b981;
-}
-
-.connection-badge.connecting {
-  background: rgba(41, 14, 153, 0.15);
-  color: var(--finbro-purple);
-  animation: pulse 1.5s ease-in-out infinite;
-}
-
-.connection-badge.error {
-  background: rgba(239, 68, 68, 0.15);
-  color: #ef4444;
-}
-
-/* Agent Selector */
-.agent-selector {
-  padding: 16px 24px;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
-}
-
-.agent-dropdown {
-  position: relative;
+  cursor: pointer;
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 12px 16px;
-  background: rgba(255, 255, 255, 0.7);
-  border: 1px solid rgba(41, 14, 153, 0.15);
-  border-radius: 12px;
+  gap: 8px;
   transition: all 0.2s ease;
-  backdrop-filter: blur(10px);
-  box-shadow: 0 2px 8px rgba(41, 14, 153, 0.08);
+  box-shadow: 0 2px 8px rgba(41, 14, 153, 0.2);
+  flex-shrink: 0;
 }
 
-.agent-dropdown:hover {
-  border-color: rgba(41, 14, 153, 0.3);
-  box-shadow: 0 4px 12px rgba(41, 14, 153, 0.12);
+.autofill-button:hover {
   transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(41, 14, 153, 0.3);
 }
 
-.agent-icon {
-  font-size: 20px;
+.autofill-button:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 6px rgba(41, 14, 153, 0.2);
+}
+
+.autofill-button.connected {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+}
+
+.autofill-button.connected:hover {
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+}
+
+.autofill-icon {
+  font-size: 16px;
   line-height: 1;
 }
 
-.agent-select {
-  flex: 1;
-  background: transparent;
-  border: none;
-  outline: none;
-  font-size: 14px;
-  font-weight: 500;
-  color: var(--finbro-black);
-  cursor: pointer;
-  font-family: inherit;
+.autofill-text {
+  font-size: 13px;
 }
 
-.agent-select option {
-  background: var(--finbro-white);
-  color: var(--finbro-black);
-  padding: 8px;
+.autofill-status {
+  font-size: 8px;
+  line-height: 1;
+  color: rgba(255, 255, 255, 0.8);
 }
 
-/* Chat Input Container */
-.chat-input-container {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  padding: 24px;
-  gap: 12px;
-  overflow-y: auto;
-}
-
-.chat-textarea {
-  flex: 1;
-  background: rgba(255, 255, 255, 0.9);
-  border: 2px solid rgba(41, 14, 153, 0.12);
-  border-radius: 16px;
-  padding: 16px;
-  font-size: 14px;
-  font-family: inherit;
-  color: var(--finbro-black);
-  resize: none;
-  outline: none;
-  transition: all 0.2s ease;
-  line-height: 1.6;
-  backdrop-filter: blur(10px);
-  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.02);
-}
-
-.chat-textarea:focus {
-  border-color: var(--finbro-purple);
-  box-shadow: 0 0 0 4px rgba(41, 14, 153, 0.08),
-              inset 0 2px 4px rgba(0, 0, 0, 0.02);
-}
-
-.chat-textarea::placeholder {
-  color: var(--finbro-grey);
-  opacity: 0.6;
-}
-
-.chat-textarea:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-/* Send Button */
-.send-button {
-  align-self: flex-end;
-  width: 48px;
-  height: 48px;
-  background: linear-gradient(135deg, var(--finbro-purple) 0%, var(--finbro-purple-light) 100%);
-  border: none;
-  border-radius: 14px;
-  color: var(--finbro-white);
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.2s ease;
-  box-shadow: 0 4px 12px rgba(41, 14, 153, 0.25),
-              0 2px 4px rgba(41, 14, 153, 0.15);
-  position: relative;
-  overflow: hidden;
-}
-
-.send-button::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: linear-gradient(135deg, transparent 0%, rgba(255, 255, 255, 0.1) 100%);
-  opacity: 0;
-  transition: opacity 0.2s ease;
-}
-
-.send-button:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(41, 14, 153, 0.35),
-              0 2px 4px rgba(41, 14, 153, 0.2);
-}
-
-.send-button:hover::before {
-  opacity: 1;
-}
-
-.send-button:active {
-  transform: translateY(0);
-  box-shadow: 0 2px 8px rgba(41, 14, 153, 0.3);
-}
-
-.send-button:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-  transform: none !important;
-  box-shadow: 0 2px 8px rgba(41, 14, 153, 0.15);
-}
-
-.send-button svg {
-  transform: translateX(1px);
-}
-
-/* Processing State */
-.send-button.processing {
-  animation: pulse 1.5s ease-in-out infinite;
+.autofill-button.connected .autofill-status {
+  color: rgba(255, 255, 255, 1);
+  animation: pulse 2s ease-in-out infinite;
 }
 
 /* Animations */
@@ -463,81 +276,13 @@ body {
     opacity: 1;
   }
   50% {
-    opacity: 0.7;
+    opacity: 0.5;
   }
 }
 
 /* Responsive */
 @media (max-width: 1200px) {
-  :root {
-    --sidebar-width: 320px;
-  }
-  
   .tab {
     min-width: 140px;
   }
-}
-
-@media (max-width: 768px) {
-  :root {
-    --sidebar-width: 280px;
-  }
-}
-
-/* ============================================================
-   CDP CONNECTION SECTION
-   ============================================================ */
-
-.cdp-info {
-  padding: 12px 24px;
-}
-
-.cdp-endpoint {
-  font-size: 11px;
-  font-family: 'SF Mono', 'Monaco', 'Courier New', monospace;
-  color: var(--finbro-grey);
-  background: rgba(0, 0, 0, 0.04);
-  padding: 8px 12px;
-  border-radius: 8px;
-  word-break: break-all;
-  border: 1px solid rgba(0, 0, 0, 0.06);
-}
-
-.cdp-connect-button {
-  margin: 0 24px;
-  padding: 12px 20px;
-  background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
-  border: none;
-  border-radius: 10px;
-  color: var(--finbro-white);
-  font-size: 13px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-  width: calc(100% - 48px);
-}
-
-.cdp-connect-button:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-}
-
-.cdp-connect-button:active {
-  transform: translateY(0);
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
-}
-
-.cdp-connect-button:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-  transform: none !important;
-}
-
-.cdp-connect-button.connected {
-  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-}
-
-.cdp-connect-button.connected:hover {
-  background: linear-gradient(135deg, #059669 0%, #047857 100%);
 }

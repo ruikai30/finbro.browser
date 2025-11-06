@@ -2,7 +2,7 @@
 ---- Always use this prompt before starting any conversation
 ----
 
-Read this entire repository. Start by reading MASTER.md
+Read this entire repository. Start by reading README.md
 Most importantly, understand how this under repository is structured. Read the structure and then, fully internalise everything.
 You may want to selectively deep-dive into some scripts to strengthen your understanding of this repo. But you don't have to overdo it - focus on breadth over depth as this is just the start
 Once after this, I will let you know the specific task to do - and then we can deep-dive into a few folders/scripts that handles that particular task.

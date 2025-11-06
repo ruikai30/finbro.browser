@@ -52,11 +52,10 @@ export async function createMainWindow(): Promise<BrowserWindow> {
   
   await mainWindow.loadFile(rendererPath);
   
-  // Create tabs manager with updated dimensions for glassmorphism sidebar
-  const toolbarHeight = 40;  // Reduced toolbar height (tabs only)
-  const sidebarWidth = 380;  // Right sidebar for AI chat
+  // Create tabs manager with updated dimensions (no sidebar)
+  const toolbarHeight = 40;  // Toolbar height (tabs only)
   const urlbarHeight = 36;   // URL bar height
-  tabsManager = createTabsManager(mainWindow, toolbarHeight, sidebarWidth, urlbarHeight);
+  tabsManager = createTabsManager(mainWindow, toolbarHeight, urlbarHeight);
   setTabsManager(tabsManager);
   
   // Open DevTools in debug mode

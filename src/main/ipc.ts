@@ -6,13 +6,12 @@
  */
 
 import { ipcMain, IpcMainInvokeEvent } from 'electron';
-import { IpcChannel, BridgeSendPromptRequest } from '../types/ipc.types';
+import { IpcChannel } from '../types/ipc.types';
 import { TabsManager } from './tabs';
 import { getConfig, setConfig } from './config';
 import { ToolCall } from '../types/tool.types';
 import { executeTool, setTabsManagerGetter } from './tools/executor';
 import { getAllToolDefinitions } from './tools/registry';
-import { getAgentBridge } from './agent-bridge';
 import { getCdpClient } from './cdp-client';
 
 // TabsManager instance (set by windows.ts)
@@ -58,12 +57,6 @@ export function registerIpcHandlers(): void {
   // Tool Operations
   ipcMain.handle(IpcChannel.TOOLS_EXECUTE, handleToolExecute);
   ipcMain.handle(IpcChannel.TOOLS_GET_ALL, handleToolsGetAll);
-  
-  // Agent Bridge Controls
-  ipcMain.handle(IpcChannel.BRIDGE_CONNECT, handleBridgeConnect);
-  ipcMain.handle(IpcChannel.BRIDGE_DISCONNECT, handleBridgeDisconnect);
-  ipcMain.handle(IpcChannel.BRIDGE_STATUS, handleBridgeStatus);
-  ipcMain.handle(IpcChannel.BRIDGE_SEND_PROMPT, handleBridgeSendPrompt);
   
   // CDP WebSocket Client Controls
   ipcMain.handle(IpcChannel.CDP_CONNECT, handleCdpConnect);
@@ -193,53 +186,6 @@ async function handleToolsGetAll(
 }
 
 /**
- * Agent Bridge Control Handlers
- */
-
-async function handleBridgeConnect(
-  event: IpcMainInvokeEvent
-): Promise<void> {
-  const bridge = getAgentBridge();
-  if (bridge) {
-    await bridge.connect();
-  }
-}
-
-async function handleBridgeDisconnect(
-  event: IpcMainInvokeEvent
-): Promise<void> {
-  const bridge = getAgentBridge();
-  if (bridge) {
-    bridge.disconnect();
-  }
-}
-
-async function handleBridgeStatus(
-  event: IpcMainInvokeEvent
-): Promise<{ state: string }> {
-  const bridge = getAgentBridge();
-  const state = bridge ? bridge.getState() : 'disconnected';
-  return { state };
-}
-
-async function handleBridgeSendPrompt(
-  event: IpcMainInvokeEvent,
-  args: BridgeSendPromptRequest
-): Promise<void> {
-  const bridge = getAgentBridge();
-  if (!bridge) {
-    throw new Error('Agent bridge not initialized');
-  }
-  
-  const promptPreview = args.prompt.length > 50 
-    ? args.prompt.substring(0, 50) + '...' 
-    : args.prompt;
-  console.log('[IPC] bridge:sendPrompt -', promptPreview);
-  
-  bridge.sendPrompt(args.prompt);
-}
-
-/**
  * CDP WebSocket Client Control Handlers
  */
 
@@ -268,5 +214,3 @@ async function handleCdpStatus(
   const state = cdpClient ? cdpClient.getState() : 'disconnected';
   return { state };
 }
-
-

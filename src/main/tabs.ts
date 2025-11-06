@@ -28,13 +28,11 @@ export class TabsManager {
   private nextId: number = 0;
   private window: BrowserWindow;
   private toolbarHeight: number;
-  private sidebarWidth: number;
   private urlbarHeight: number;
 
-  constructor(window: BrowserWindow, toolbarHeight: number = 40, sidebarWidth: number = 380, urlbarHeight: number = 36) {
+  constructor(window: BrowserWindow, toolbarHeight: number = 40, urlbarHeight: number = 36) {
     this.window = window;
     this.toolbarHeight = toolbarHeight;
-    this.sidebarWidth = sidebarWidth;
     this.urlbarHeight = urlbarHeight;
   }
 
@@ -252,11 +250,11 @@ export class TabsManager {
     const width = contentSize[0] || 1024;
     const height = contentSize[1] || 768;
     
-    // Account for toolbar + URL bar at top and sidebar on right
+    // Account for toolbar + URL bar at top (no sidebar)
     tab.view.setBounds({
       x: 0,
       y: this.toolbarHeight + this.urlbarHeight,
-      width: width - this.sidebarWidth,
+      width: width,
       height: height - this.toolbarHeight - this.urlbarHeight
     });
   }
@@ -327,9 +325,8 @@ export class TabsManager {
 export function createTabsManager(
   window: BrowserWindow,
   toolbarHeight?: number,
-  sidebarWidth?: number,
   urlbarHeight?: number
 ): TabsManager {
-  return new TabsManager(window, toolbarHeight, sidebarWidth, urlbarHeight);
+  return new TabsManager(window, toolbarHeight, urlbarHeight);
 }
 

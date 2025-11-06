@@ -1,13 +1,7 @@
 /**
  * Tool Type Definitions
- * 
- * Defines the contract for AI agent tool calling.
- * Compatible with OpenAI/Anthropic function calling formats.
  */
 
-/**
- * Tool definition schema (OpenAI/Anthropic compatible)
- */
 export interface ToolDefinition {
   name: string;
   description: string;
@@ -19,7 +13,7 @@ export interface ToolDefinition {
 }
 
 /**
- * Tool call request from AI agent
+ * Tool call request
  */
 export interface ToolCall {
   tool: string;
@@ -36,6 +30,3 @@ export interface ToolResult {
   error?: string;
   callId?: string;
 }
-
-// Removed unused: ToolHandler type
-

@@ -28,12 +28,6 @@ export enum IpcChannel {
   TOOLS_EXECUTE = 'tools:execute',
   TOOLS_GET_ALL = 'tools:getAll',
   
-  // Agent Bridge Controls
-  BRIDGE_CONNECT = 'bridge:connect',
-  BRIDGE_DISCONNECT = 'bridge:disconnect',
-  BRIDGE_STATUS = 'bridge:status',
-  BRIDGE_SEND_PROMPT = 'bridge:sendPrompt',
-  
   // CDP WebSocket Client Controls
   CDP_CONNECT = 'cdp:connect',
   CDP_DISCONNECT = 'cdp:disconnect',
@@ -80,11 +74,3 @@ export interface ConfigSetRequest {
 export interface ConfigGetResponse {
   config: AppConfig;
 }
-
-// Agent Bridge
-export interface BridgeSendPromptRequest {
-  prompt: string;
-}
-
-// Removed unused: IpcHandlerMap interface
-

@@ -19,9 +19,6 @@ const IpcChannel = {
   CONFIG_SET: 'config:set',
   TOOLS_EXECUTE: 'tools:execute',
   TOOLS_GET_ALL: 'tools:getAll',
-  BRIDGE_CONNECT: 'bridge:connect',
-  BRIDGE_DISCONNECT: 'bridge:disconnect',
-  BRIDGE_STATUS: 'bridge:status',
   CDP_CONNECT: 'cdp:connect',
   CDP_DISCONNECT: 'cdp:disconnect',
   CDP_STATUS: 'cdp:status',
@@ -118,40 +115,6 @@ const finbroApi = {
   },
   
   /**
-   * Agent Bridge Controls
-   */
-  bridge: {
-    /**
-     * Manually connect to agent server
-     */
-    connect: async (): Promise<void> => {
-      return await ipcRenderer.invoke(IpcChannel.BRIDGE_CONNECT);
-    },
-    
-    /**
-     * Manually disconnect from agent server
-     */
-    disconnect: async (): Promise<void> => {
-      return await ipcRenderer.invoke(IpcChannel.BRIDGE_DISCONNECT);
-    },
-    
-    /**
-     * Get connection status
-     */
-    status: async (): Promise<{ state: string }> => {
-      return await ipcRenderer.invoke(IpcChannel.BRIDGE_STATUS);
-    },
-    
-    /**
-     * Send a prompt to the AI agent
-     */
-    sendPrompt: async (prompt: string): Promise<void> => {
-      // Using string literal due to TypeScript enum resolution issue
-      return await ipcRenderer.invoke('bridge:sendPrompt', { prompt });
-    }
-  },
-  
-  /**
    * CDP WebSocket Client Controls
    */
   cdp: {
@@ -183,4 +146,3 @@ contextBridge.exposeInMainWorld('Finbro', finbroApi);
 
 // Type declaration for TypeScript in renderer
 export type FinbroApi = typeof finbroApi;
-
