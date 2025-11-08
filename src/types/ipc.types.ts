@@ -32,6 +32,9 @@ export enum IpcChannel {
   CDP_CONNECT = 'cdp:connect',
   CDP_DISCONNECT = 'cdp:disconnect',
   CDP_STATUS = 'cdp:status',
+  
+  // Authentication
+  AUTH_SEND_TOKEN = 'auth:send-token',
 }
 
 /**
@@ -73,4 +76,9 @@ export interface ConfigSetRequest {
 
 export interface ConfigGetResponse {
   config: AppConfig;
+}
+
+// Authentication
+export interface AuthSendTokenRequest {
+  token: string | null;
 }

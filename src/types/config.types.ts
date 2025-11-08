@@ -30,5 +30,5 @@ export const DEFAULT_CONFIG: AppConfig = {
   debugMode: false,
   toolbarHeight: 100,
   cdpEnabled: false,
-  cdpWebSocketUrl: 'ws://127.0.0.1:8000/ws/browser'
+  cdpWebSocketUrl: 'ws://127.0.0.1:8000/browser/ws'
 };

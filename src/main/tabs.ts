@@ -5,8 +5,9 @@
  * Handles creation, switching, layout, and code execution in tab contexts.
  */
 
-import { BrowserWindow, BrowserView } from 'electron';
+import { BrowserView, BrowserWindow } from 'electron';
 import { getConfigValue } from './config';
+import * as path from 'path';
 
 /**
  * Tab data structure
@@ -51,6 +52,7 @@ export class TabsManager {
     // Create BrowserView with security settings
     const view = new BrowserView({
       webPreferences: {
+        preload: path.join(__dirname, '../preload/preload.js'),
         contextIsolation: true,
         nodeIntegration: false,
         sandbox: true,
@@ -273,6 +275,21 @@ export class TabsManager {
    */
   private setupTabListeners(tab: Tab): void {
     const { webContents } = tab.view;
+    
+    // Inject Electron detection flag when page loads
+    webContents.on('did-finish-load', () => {
+      webContents.executeJavaScript(`
+        window.__FINBRO_ENV__ = {
+          isElectron: true
+        };
+      `).catch(err => {
+        console.error('[Tabs] Failed to inject Electron flag:', err);
+      });
+      
+      if (getConfigValue('debugMode')) {
+        console.log('[Tabs] Tab', tab.id, 'loaded - injected __FINBRO_ENV__');
+      }
+    });
     
     // Track title changes
     webContents.on('page-title-updated', (event, title) => {

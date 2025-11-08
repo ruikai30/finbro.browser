@@ -13,6 +13,7 @@ import { ToolCall } from '../types/tool.types';
 import { executeTool, setTabsManagerGetter } from './tools/executor';
 import { getAllToolDefinitions } from './tools/registry';
 import { getCdpClient } from './cdp-client';
+import { handleAuthToken } from './auth';
 
 // TabsManager instance (set by windows.ts)
 let tabsManager: TabsManager | null = null;
@@ -62,6 +63,9 @@ export function registerIpcHandlers(): void {
   ipcMain.handle(IpcChannel.CDP_CONNECT, handleCdpConnect);
   ipcMain.handle(IpcChannel.CDP_DISCONNECT, handleCdpDisconnect);
   ipcMain.handle(IpcChannel.CDP_STATUS, handleCdpStatus);
+  
+  // Authentication
+  ipcMain.handle(IpcChannel.AUTH_SEND_TOKEN, handleAuthSendToken);
   
   console.log('[IPC] All handlers registered');
 }
@@ -213,4 +217,19 @@ async function handleCdpStatus(
   const cdpClient = getCdpClient();
   const state = cdpClient ? cdpClient.getState() : 'disconnected';
   return { state };
+}
+
+/**
+ * Authentication Handlers
+ */
+
+async function handleAuthSendToken(
+  event: IpcMainInvokeEvent,
+  args: { token: string | null }
+): Promise<void> {
+  console.log('='.repeat(60));
+  console.log('[IPC] ⚡ AUTH TOKEN RECEIVED FROM RENDERER');
+  console.log('[IPC] Token:', args.token ? 'Present' : 'NULL (logout)');
+  console.log('='.repeat(60));
+  handleAuthToken(args.token);
 }

@@ -22,6 +22,7 @@ const IpcChannel = {
   CDP_CONNECT: 'cdp:connect',
   CDP_DISCONNECT: 'cdp:disconnect',
   CDP_STATUS: 'cdp:status',
+  AUTH_SEND_TOKEN: 'auth:send-token',
 } as const;
 
 /**
@@ -138,11 +139,31 @@ const finbroApi = {
     status: async (): Promise<{ state: string }> => {
       return await ipcRenderer.invoke(IpcChannel.CDP_STATUS);
     }
+  },
+
+  /**
+   * Authentication (for finbro.me web app)
+   */
+  auth: {
+    /**
+     * Send JWT token from web app to Electron
+     * @param token - JWT access token from Supabase (or null to logout)
+     */
+    sendAuthToken: async (token: string | null): Promise<void> => {
+      return await ipcRenderer.invoke(IpcChannel.AUTH_SEND_TOKEN, { token });
+    }
   }
 };
 
 // Expose API to renderer
 contextBridge.exposeInMainWorld('Finbro', finbroApi);
+
+// Also expose as 'finbro' for web app compatibility
+contextBridge.exposeInMainWorld('finbro', {
+  sendAuthToken: async (token: string | null): Promise<void> => {
+    return await ipcRenderer.invoke(IpcChannel.AUTH_SEND_TOKEN, { token });
+  }
+});
 
 // Type declaration for TypeScript in renderer
 export type FinbroApi = typeof finbroApi;
