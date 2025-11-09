@@ -12,6 +12,7 @@ import type { TabData } from './types';
 export const App: React.FC = () => {
   const [tabs, setTabs] = useState<TabData[]>([]);
   const [currentTabId, setCurrentTabId] = useState<number>(-1);
+  const [currentUrl, setCurrentUrl] = useState<string>('');
   const [animatingTabIds, setAnimatingTabIds] = useState<Set<number>>(new Set());
 
   // Fetch tabs from main process
@@ -20,6 +21,14 @@ export const App: React.FC = () => {
       const result = await window.Finbro.tabs.getAll();
       setTabs(result.tabs);
       setCurrentTabId(result.currentTabId);
+      
+      // Update current URL based on active tab
+      const activeTab = result.tabs.find(tab => tab.id === result.currentTabId);
+      if (activeTab) {
+        setCurrentUrl(activeTab.url);
+      } else {
+        setCurrentUrl('');
+      }
     } catch (error) {
       console.error('[App] Failed to update tabs:', error);
     }
@@ -91,7 +100,7 @@ export const App: React.FC = () => {
           onNewTab={handleNewTab}
         />
       </header>
-      <UrlBar onNavigate={handleNavigate} />
+      <UrlBar currentUrl={currentUrl} onNavigate={handleNavigate} />
     </>
   );
 };

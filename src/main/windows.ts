@@ -53,8 +53,8 @@ export async function createMainWindow(): Promise<BrowserWindow> {
   await mainWindow.loadFile(rendererPath);
   
   // Create tabs manager with updated dimensions (no sidebar)
-  const toolbarHeight = 40;  // Toolbar height (tabs only)
-  const urlbarHeight = 36;   // URL bar height
+  const toolbarHeight = 46;  // Toolbar height (tabs only) - updated for glassmorphism
+  const urlbarHeight = 48;   // URL bar height - updated for glassmorphism
   tabsManager = createTabsManager(mainWindow, toolbarHeight, urlbarHeight);
   setTabsManager(tabsManager);
   setMainWindow(mainWindow);

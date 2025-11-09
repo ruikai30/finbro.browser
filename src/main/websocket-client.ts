@@ -178,7 +178,7 @@ function handleAnimationMessage(message: any): void {
 }
 
 /**
- * Inject purple edge glow CSS into a tab's web page
+ * Inject purple ambient gradient animation CSS into a tab's web page
  */
 function injectAnimationCSS(tabId: number): void {
   const tabsManager = getTabsManager();
@@ -194,18 +194,33 @@ function injectAnimationCSS(tabId: number): void {
   }
   
   const css = `
-    @keyframes finbro-edge-pulse {
+    @keyframes finbro-ambient-glow {
       0%, 100% {
-        box-shadow: 
-          inset 0 0 60px rgba(139, 92, 246, 0.5),
-          inset 0 0 120px rgba(167, 139, 250, 0.3),
-          inset 0 0 180px rgba(196, 181, 253, 0.15);
+        background-position: 0% 0%, 100% 0%, 100% 100%, 0% 100%;
+        opacity: 0.7;
+      }
+      25% {
+        background-position: 100% 0%, 100% 100%, 0% 100%, 0% 0%;
+        opacity: 0.9;
       }
       50% {
-        box-shadow: 
-          inset 0 0 100px rgba(139, 92, 246, 0.7),
-          inset 0 0 160px rgba(167, 139, 250, 0.5),
-          inset 0 0 220px rgba(196, 181, 253, 0.25);
+        background-position: 100% 100%, 0% 100%, 0% 0%, 100% 0%;
+        opacity: 0.8;
+      }
+      75% {
+        background-position: 0% 100%, 0% 0%, 100% 0%, 100% 100%;
+        opacity: 1;
+      }
+    }
+    
+    @keyframes finbro-corner-pulse {
+      0%, 100% {
+        transform: scale(1) rotate(0deg);
+        opacity: 0.8;
+      }
+      50% {
+        transform: scale(1.1) rotate(5deg);
+        opacity: 1;
       }
     }
     
@@ -218,9 +233,41 @@ function injectAnimationCSS(tabId: number): void {
       bottom: 0 !important;
       pointer-events: none !important;
       z-index: 2147483647 !important;
-      border: 3px solid rgba(139, 92, 246, 0.4) !important;
-      animation: finbro-edge-pulse 2.5s ease-in-out infinite !important;
+      background: 
+        radial-gradient(ellipse 600px 500px at 0% 0%, rgba(139, 92, 246, 0.65), transparent 70%),
+        radial-gradient(ellipse 600px 500px at 100% 0%, rgba(124, 58, 237, 0.6), transparent 70%),
+        radial-gradient(ellipse 600px 500px at 100% 100%, rgba(139, 92, 246, 0.7), transparent 70%),
+        radial-gradient(ellipse 600px 500px at 0% 100%, rgba(167, 139, 250, 0.65), transparent 70%) !important;
+      background-size: 600px 500px, 600px 500px, 600px 500px, 600px 500px !important;
+      background-repeat: no-repeat !important;
+      animation: finbro-ambient-glow 8s ease-in-out infinite !important;
       box-sizing: border-box !important;
+      filter: blur(60px) !important;
+    }
+    
+    html::after {
+      content: '' !important;
+      position: fixed !important;
+      top: 0 !important;
+      left: 0 !important;
+      right: 0 !important;
+      bottom: 0 !important;
+      pointer-events: none !important;
+      z-index: 2147483646 !important;
+      border: 5px solid transparent !important;
+      border-image: linear-gradient(
+        135deg,
+        rgba(139, 92, 246, 0.8),
+        rgba(167, 139, 250, 0.6),
+        rgba(124, 58, 237, 0.75),
+        rgba(139, 92, 246, 0.8)
+      ) 1 !important;
+      box-sizing: border-box !important;
+      animation: finbro-corner-pulse 3s ease-in-out infinite !important;
+      box-shadow: 
+        inset 0 0 100px rgba(139, 92, 246, 0.5),
+        inset 0 0 160px rgba(167, 139, 250, 0.35),
+        0 0 60px rgba(139, 92, 246, 0.6) !important;
     }
   `;
   

@@ -27,6 +27,6 @@ export interface AppConfig {
 export const DEFAULT_CONFIG: AppConfig = {
   startupTabs: ['https://finbro.me'],
   debugMode: false,
-  toolbarHeight: 100,
+  toolbarHeight: 94,  // 46px toolbar + 48px urlbar for glassmorphism design
   automationServerUrl: 'ws://127.0.0.1:8000/browser/ws'
 };
