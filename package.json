@@ -1,7 +1,7 @@
 {
   "name": "finbro-browser",
-  "version": "0.1.0",
-  "description": "Custom Chromium-based browser with intelligent autofill capabilities",
+  "version": "0.0.1",
+  "description": "AI-native browser for finbro.me",
   "main": "dist/main/main.js",
   "author": "Finbro",
   "license": "MIT",
@@ -31,7 +31,7 @@
   },
   "build": {
     "appId": "com.finbro.browser",
-    "productName": "Finbro Browser",
+    "productName": "finbro.me",
     "files": [
       "dist/**/*",
       "build/**/*"
@@ -53,14 +53,6 @@
         "nsis",
         "portable"
       ]
-    },
-    "linux": {
-      "icon": "build/icon.png",
-      "target": [
-        "AppImage",
-        "deb"
-      ],
-      "category": "Utility"
     }
   }
 }

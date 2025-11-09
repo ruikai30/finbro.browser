@@ -35,7 +35,7 @@ export async function createMainWindow(): Promise<BrowserWindow> {
       nodeIntegration: false,
       sandbox: true
     },
-    title: 'Finbro Browser',
+    title: 'finbro.me',
     backgroundColor: '#f0f0f0',
     show: false // Show after ready-to-show event
   });

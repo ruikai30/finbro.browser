@@ -11,7 +11,7 @@ import { registerIpcHandlers } from './ipc';
 import { getConfig } from './config';
 
 console.log('='.repeat(60));
-console.log('Finbro Browser - Starting');
+console.log('finbro.me - Starting');
 console.log('Version:', app.getVersion());
 console.log('Electron:', process.versions.electron);
 console.log('Chrome:', process.versions.chrome);
