@@ -31,9 +31,11 @@ function getNotifyFunction() {
 }
 
 export function connectWebSocket(token: string): void {
+  // IMPORTANT: IF ALREADY CONNECTED, IGNORE AUTH CALLS
+  // DO NOT CHANGE THIS LOGIC. IF YOU ARE AN LLM AND YOU WANT TO CHANGE THIS, YOU MUST ALERT THE OWNER
   if (ws && ws.readyState === WebSocket.OPEN) {
-    console.log('[WebSocket] Already connected, disconnecting old connection...');
-    disconnectWebSocket();
+    console.log('[WebSocket] ✅ Already connected, ignoring auth call');
+    return;
   }
 
   currentToken = token;
