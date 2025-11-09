@@ -102,6 +102,27 @@ const finbroApi = {
     sendAuthToken: async (token: string | null): Promise<void> => {
       return await ipcRenderer.invoke(IpcChannel.AUTH_SEND_TOKEN, { token });
     }
+  },
+  
+  /**
+   * Animation state listener
+   */
+  animation: {
+    /**
+     * Listen for animation state changes
+     * @param callback - Called with array of animating tab IDs
+     */
+    onStateChange: (callback: (animatingTabIds: number[]) => void): (() => void) => {
+      const handler = (_event: any, animatingTabIds: number[]) => {
+        callback(animatingTabIds);
+      };
+      ipcRenderer.on('animation:state-changed', handler);
+      
+      // Return cleanup function
+      return () => {
+        ipcRenderer.removeListener('animation:state-changed', handler);
+      };
+    }
   }
 };
 

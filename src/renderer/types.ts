@@ -23,6 +23,9 @@ declare global {
         get: () => Promise<{ config: any }>;
         set: (config: any) => Promise<void>;
       };
+      animation: {
+        onStateChange: (callback: (animatingTabIds: number[]) => void) => () => void;
+      };
     };
   }
 }

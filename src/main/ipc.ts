@@ -5,7 +5,7 @@
  * Type-safe routing using IpcChannel enum.
  */
 
-import { ipcMain, IpcMainInvokeEvent } from 'electron';
+import { ipcMain, IpcMainInvokeEvent, BrowserWindow } from 'electron';
 import { IpcChannel } from '../types/ipc.types';
 import { TabsManager } from './tabs';
 import { getConfig, setConfig } from './config';
@@ -13,6 +13,7 @@ import { handleAuthToken } from './auth';
 
 // TabsManager instance (set by windows.ts)
 let tabsManager: TabsManager | null = null;
+let mainWindow: BrowserWindow | null = null;
 
 /**
  * Set the tabs manager instance
@@ -23,10 +24,28 @@ export function setTabsManager(manager: TabsManager): void {
 }
 
 /**
+ * Set the main window instance
+ * Called by windows.ts after creating the window
+ */
+export function setMainWindow(window: BrowserWindow): void {
+  mainWindow = window;
+}
+
+/**
  * Get the tabs manager instance (for other modules)
  */
 export function getTabsManager(): TabsManager | null {
   return tabsManager;
+}
+
+/**
+ * Notify renderer of animation state change
+ * @param animatingTabIds - Array of tab IDs currently animating
+ */
+export function notifyAnimationStateChange(animatingTabIds: number[]): void {
+  if (mainWindow && !mainWindow.isDestroyed()) {
+    mainWindow.webContents.send('animation:state-changed', animatingTabIds);
+  }
 }
 
 /**

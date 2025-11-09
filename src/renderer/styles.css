@@ -216,3 +216,55 @@ body {
   }
 }
 
+/* ============================================================
+   AI ANIMATION SYSTEM
+   ============================================================ */
+
+/* Tab Gleam Animation - Elegant shimmer effect on animating tabs */
+.tab.animating {
+  position: relative;
+  overflow: hidden;
+}
+
+.tab-gleam {
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(139, 92, 246, 0.25) 50%,
+    transparent 100%
+  );
+  animation: tab-gleam-sweep 2.5s ease-in-out infinite;
+  pointer-events: none;
+  z-index: 1;
+}
+
+@keyframes tab-gleam-sweep {
+  0% {
+    left: -100%;
+  }
+  40% {
+    left: 100%;
+  }
+  100% {
+    left: 100%;
+  }
+}
+
+/* Enhanced styling for animating tabs */
+.tab.animating.active {
+  border-color: rgba(139, 92, 246, 0.3);
+  box-shadow: 0 -2px 8px rgba(139, 92, 246, 0.15);
+}
+
+/* Purple theme color palette for AI animations */
+:root {
+  --ai-purple-500: #8B5CF6;
+  --ai-purple-400: #A78BFA;
+  --ai-purple-300: #C4B5FD;
+  --ai-purple-600: #7C3AED;
+}

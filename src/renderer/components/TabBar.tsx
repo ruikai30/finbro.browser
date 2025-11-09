@@ -10,6 +10,7 @@ import type { TabData } from '../types';
 interface TabBarProps {
   tabs: TabData[];
   currentTabId: number;
+  animatingTabIds: Set<number>;
   onTabSwitch: (tabId: number) => void;
   onTabClose: (tabId: number) => void;
   onNewTab: () => void;
@@ -18,6 +19,7 @@ interface TabBarProps {
 export const TabBar: React.FC<TabBarProps> = ({
   tabs,
   currentTabId,
+  animatingTabIds,
   onTabSwitch,
   onTabClose,
   onNewTab,
@@ -38,10 +40,10 @@ export const TabBar: React.FC<TabBarProps> = ({
       {tabs.map((tab) => (
         <div
           key={tab.id}
-          className={`tab ${tab.id === currentTabId ? 'active' : ''}`}
+          className={`tab ${tab.id === currentTabId ? 'active' : ''} ${animatingTabIds.has(tab.id) ? 'animating' : ''}`}
           onClick={() => onTabSwitch(tab.id)}
         >
-          <span className="tab-favicon">🌐</span>
+          <span className="tab-favicon">{animatingTabIds.has(tab.id) ? '🤖' : '🌐'}</span>
           <span className="tab-title">{getTabTitle(tab)}</span>
           <span
             className="tab-close"
@@ -52,6 +54,7 @@ export const TabBar: React.FC<TabBarProps> = ({
           >
             ✕
           </span>
+          {animatingTabIds.has(tab.id) && <div className="tab-gleam"></div>}
         </div>
       ))}
       <button className="new-tab-btn" onClick={onNewTab} title="New Tab">

@@ -8,7 +8,7 @@
 import { BrowserWindow, screen } from 'electron';
 import * as path from 'path';
 import { createTabsManager, TabsManager } from './tabs';
-import { setTabsManager } from './ipc';
+import { setTabsManager, setMainWindow } from './ipc';
 import { getConfig } from './config';
 
 let mainWindow: BrowserWindow | null = null;
@@ -57,6 +57,7 @@ export async function createMainWindow(): Promise<BrowserWindow> {
   const urlbarHeight = 36;   // URL bar height
   tabsManager = createTabsManager(mainWindow, toolbarHeight, urlbarHeight);
   setTabsManager(tabsManager);
+  setMainWindow(mainWindow);
   
   // Open DevTools in debug mode
   if (config.debugMode) {

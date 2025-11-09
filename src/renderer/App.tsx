@@ -12,6 +12,7 @@ import type { TabData } from './types';
 export const App: React.FC = () => {
   const [tabs, setTabs] = useState<TabData[]>([]);
   const [currentTabId, setCurrentTabId] = useState<number>(-1);
+  const [animatingTabIds, setAnimatingTabIds] = useState<Set<number>>(new Set());
 
   // Fetch tabs from main process
   const updateTabs = async () => {
@@ -29,6 +30,15 @@ export const App: React.FC = () => {
     updateTabs();
     const interval = setInterval(updateTabs, 1000);
     return () => clearInterval(interval);
+  }, []);
+  
+  // Listen for animation state changes
+  useEffect(() => {
+    const cleanup = window.Finbro.animation.onStateChange((tabIds) => {
+      setAnimatingTabIds(new Set(tabIds));
+    });
+    
+    return cleanup;
   }, []);
 
   // Handlers
@@ -75,6 +85,7 @@ export const App: React.FC = () => {
         <TabBar
           tabs={tabs}
           currentTabId={currentTabId}
+          animatingTabIds={animatingTabIds}
           onTabSwitch={handleTabSwitch}
           onTabClose={handleTabClose}
           onNewTab={handleNewTab}

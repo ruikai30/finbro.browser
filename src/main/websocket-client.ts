@@ -13,8 +13,22 @@ let ws: WebSocket | null = null;
 let currentToken: string | null = null;
 let reconnectTimeout: NodeJS.Timeout | null = null;
 
+// Track animating tabs
+const animatingTabs = new Set<number>();
+
 const RECONNECT_DELAY = 5000;
 const NORMAL_CLOSURE = 1000;
+
+// Import notifyAnimationStateChange at runtime to avoid circular dependency
+let notifyAnimationStateChange: (tabIds: number[]) => void;
+
+// Lazy load the IPC notification function
+function getNotifyFunction() {
+  if (!notifyAnimationStateChange) {
+    notifyAnimationStateChange = require('./ipc').notifyAnimationStateChange;
+  }
+  return notifyAnimationStateChange;
+}
 
 export function connectWebSocket(token: string): void {
   if (ws && ws.readyState === WebSocket.OPEN) {
@@ -96,6 +110,12 @@ function handleServerMessage(message: any): void {
     return;
   }
   
+  // Handle animation control
+  if (message.type === 'animation') {
+    handleAnimationMessage(message);
+    return;
+  }
+  
   // Handle commands
   const { id, action, params } = message;
   
@@ -121,6 +141,114 @@ function handleServerMessage(message: any): void {
     
     default:
       sendError(id, `Unknown action: ${action}`);
+  }
+}
+
+function handleAnimationMessage(message: any): void {
+  const { action, tab_id } = message;
+  
+  if (!action || tab_id === undefined) {
+    console.warn('[WebSocket] Invalid animation message:', message);
+    return;
+  }
+  
+  const tabsManager = getTabsManager();
+  if (!tabsManager) {
+    console.warn('[WebSocket] TabsManager not available for animation');
+    return;
+  }
+  
+  if (action === 'start') {
+    animatingTabs.add(tab_id);
+    console.log('[WebSocket] ✨ Animation started for tab:', tab_id);
+    injectAnimationCSS(tab_id);
+  } else if (action === 'stop') {
+    animatingTabs.delete(tab_id);
+    console.log('[WebSocket] ⏹️  Animation stopped for tab:', tab_id);
+    removeAnimationCSS(tab_id);
+  } else {
+    console.warn('[WebSocket] Unknown animation action:', action);
+    return;
+  }
+  
+  // Notify renderer of animation state change
+  getNotifyFunction()(Array.from(animatingTabs));
+}
+
+/**
+ * Inject purple edge glow CSS into a tab's web page
+ */
+function injectAnimationCSS(tabId: number): void {
+  const tabsManager = getTabsManager();
+  if (!tabsManager) {
+    console.warn('[WebSocket] Cannot inject CSS - TabsManager not available');
+    return;
+  }
+  
+  const tab = tabsManager.getTab(tabId);
+  if (!tab) {
+    console.warn('[WebSocket] Cannot inject CSS - tab not found:', tabId);
+    return;
+  }
+  
+  const css = `
+    @keyframes finbro-edge-pulse {
+      0%, 100% {
+        box-shadow: 
+          inset 0 0 60px rgba(139, 92, 246, 0.5),
+          inset 0 0 120px rgba(167, 139, 250, 0.3),
+          inset 0 0 180px rgba(196, 181, 253, 0.15);
+      }
+      50% {
+        box-shadow: 
+          inset 0 0 100px rgba(139, 92, 246, 0.7),
+          inset 0 0 160px rgba(167, 139, 250, 0.5),
+          inset 0 0 220px rgba(196, 181, 253, 0.25);
+      }
+    }
+    
+    html::before {
+      content: '' !important;
+      position: fixed !important;
+      top: 0 !important;
+      left: 0 !important;
+      right: 0 !important;
+      bottom: 0 !important;
+      pointer-events: none !important;
+      z-index: 2147483647 !important;
+      border: 3px solid rgba(139, 92, 246, 0.4) !important;
+      animation: finbro-edge-pulse 2.5s ease-in-out infinite !important;
+      box-sizing: border-box !important;
+    }
+  `;
+  
+  tab.view.webContents.insertCSS(css).then((key) => {
+    // Store the key to remove it later
+    (tab as any).animationCSSKey = key;
+    console.log('[WebSocket] 💉 Successfully injected animation CSS into tab:', tabId, 'key:', key);
+  }).catch((err) => {
+    console.error('[WebSocket] ❌ Failed to inject CSS:', err);
+  });
+}
+
+/**
+ * Remove purple edge glow CSS from a tab's web page
+ */
+function removeAnimationCSS(tabId: number): void {
+  const tabsManager = getTabsManager();
+  if (!tabsManager) return;
+  
+  const tab = tabsManager.getTab(tabId);
+  if (!tab) return;
+  
+  const cssKey = (tab as any).animationCSSKey;
+  if (cssKey) {
+    tab.view.webContents.removeInsertedCSS(cssKey).then(() => {
+      delete (tab as any).animationCSSKey;
+      console.log('[WebSocket] 🧹 Removed animation CSS from tab:', tabId);
+    }).catch((err) => {
+      console.error('[WebSocket] Failed to remove CSS:', err);
+    });
   }
 }
 
@@ -284,6 +412,18 @@ export function disconnectWebSocket(): void {
   }
   
   console.log('[WebSocket] 🔌 Disconnecting from automation server...');
+  
+  // Clear all animations and remove injected CSS
+  const tabsToClean = Array.from(animatingTabs);
+  tabsToClean.forEach(tabId => {
+    removeAnimationCSS(tabId);
+  });
+  
+  animatingTabs.clear();
+  getNotifyFunction()([]);
+  console.log('[WebSocket] 🧹 Cleared all animations');
+  
+  // TODO: Show disconnect notification UI to user
   
   currentToken = null;
   ws.close(NORMAL_CLOSURE, 'User logged out');
