@@ -209,80 +209,10 @@ body {
   color: var(--finbro-black);
 }
 
-/* ============================================================
-   AUTOFILL BUTTON
-   ============================================================ */
-
-.autofill-button {
-  height: 32px;
-  padding: 0 16px;
-  margin-right: 12px;
-  background: linear-gradient(135deg, var(--finbro-purple) 0%, var(--finbro-purple-light) 100%);
-  border: none;
-  border-radius: 8px;
-  color: var(--finbro-white);
-  font-size: 13px;
-  font-weight: 600;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  transition: all 0.2s ease;
-  box-shadow: 0 2px 8px rgba(41, 14, 153, 0.2);
-  flex-shrink: 0;
-}
-
-.autofill-button:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(41, 14, 153, 0.3);
-}
-
-.autofill-button:active {
-  transform: translateY(0);
-  box-shadow: 0 2px 6px rgba(41, 14, 153, 0.2);
-}
-
-.autofill-button.connected {
-  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-}
-
-.autofill-button.connected:hover {
-  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
-}
-
-.autofill-icon {
-  font-size: 16px;
-  line-height: 1;
-}
-
-.autofill-text {
-  font-size: 13px;
-}
-
-.autofill-status {
-  font-size: 8px;
-  line-height: 1;
-  color: rgba(255, 255, 255, 0.8);
-}
-
-.autofill-button.connected .autofill-status {
-  color: rgba(255, 255, 255, 1);
-  animation: pulse 2s ease-in-out infinite;
-}
-
-/* Animations */
-@keyframes pulse {
-  0%, 100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.5;
-  }
-}
-
 /* Responsive */
 @media (max-width: 1200px) {
   .tab {
     min-width: 140px;
   }
 }
+

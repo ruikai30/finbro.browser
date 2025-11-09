@@ -53,10 +53,15 @@ finbro.browser/
 │   ├── preload/                # Security bridge
 │   │   └── preload.ts          # Exposes window.Finbro + window.finbro
 │   │
-│   ├── renderer/               # UI process
-│   │   ├── index.html          # Main UI structure
-│   │   ├── index.ts            # Tab bar rendering
-│   │   └── styles.css          # Minimal styling
+│   ├── renderer/               # React UI process
+│   │   ├── components/         # React components
+│   │   │   ├── TabBar.tsx      # Tab bar component
+│   │   │   └── UrlBar.tsx      # URL input component
+│   │   ├── App.tsx             # Main app component
+│   │   ├── index.tsx           # React entry point
+│   │   ├── types.ts            # Renderer type definitions
+│   │   ├── index.html          # HTML shell
+│   │   └── styles.css          # Component styling
 │   │
 │   └── types/                  # TypeScript definitions
 │       ├── ipc.types.ts        # IPC channels
@@ -64,6 +69,8 @@ finbro.browser/
 │
 ├── package.json
 ├── tsconfig.json
+├── tsconfig.main.json          # Main process TypeScript config
+├── vite.config.ts              # Vite bundler config
 └── README.md
 ```
 
@@ -219,19 +226,28 @@ Full CDP docs: [chromedevtools.github.io/devtools-protocol/](https://chromedevto
 npm install
 ```
 
-### Run
+### Run Development Mode
 ```bash
 npm run dev
 ```
+Builds with Vite + TypeScript and runs Electron.
 
-### Build
+### Build for Production
 ```bash
 npm run build
 ```
+- Main process: TypeScript → CommonJS (`tsc`)
+- Renderer: React + TypeScript → Bundled JS (`vite build`)
 
-### Package
+### Package Desktop App
 ```bash
 npm run dist
+```
+Creates distributable `.app` / `.exe` / `.AppImage` files.
+
+### Clean Build Artifacts
+```bash
+npm run clean
 ```
 
 ---
@@ -240,7 +256,7 @@ npm run dist
 
 ```
 ┌──────────────────────────────────────────────┐
-│ [Tab 1] [Tab 2] [+]               [Button]  │  ← Tab Bar (40px)
+│ [Tab 1] [Tab 2] [+]                         │  ← Tab Bar (40px)
 ├──────────────────────────────────────────────┤
 │ [URL: https://example.com              Go]  │  ← URL Bar (36px)
 ├──────────────────────────────────────────────┤
@@ -253,11 +269,12 @@ npm run dist
 ```
 
 **Features:**
+- React-based responsive UI
 - Click tabs to switch
 - Click **+** to create new tab
 - Click **✕** on tab to close
 - Type URL and press Enter to navigate
-- Minimal chrome = maximum content
+- Clean, minimal design
 
 ---
 
@@ -276,6 +293,12 @@ npm run dist
 
 ## 📊 Tech Stack
 
+### Frontend (Renderer)
+- **React:** 18.3+ - UI framework
+- **TypeScript:** 5.3.3 - Type safety
+- **Vite:** 7.2+ - Fast builds & bundling
+
+### Backend (Main Process)
 - **Electron:** 28.3.3 - Desktop app framework
 - **TypeScript:** 5.3.3 - Type safety
 - **ws:** 8.18.3 - WebSocket client
@@ -346,24 +369,34 @@ async def automate_form_fill(websocket: WebSocket):
 - **No routing layers** - message → execute → respond
 
 ### Separation of Concerns
-- **Browser:** Executes commands, manages tabs
+- **Browser (Main):** Executes commands, manages tabs
+- **Browser (Renderer):** React UI for visualization
 - **Server:** Orchestrates workflows, makes decisions
 - **Web App:** Handles authentication
+
+### React UI Architecture
+- **Component-based** - TabBar, UrlBar as isolated components
+- **Unidirectional data flow** - Props down, events up
+- **Type-safe** - Full TypeScript support
+- **Scalable** - Easy to add agent indicators, tab grouping, etc.
 
 ### Production-Grade Simplicity
 - Simple code = fewer bugs
 - Direct execution = easier debugging
 - Minimal surface area = better security
+- Fast builds with Vite
 
 ---
 
 ## 📈 Stats
 
-- **Source Files:** 11 TypeScript files
-- **Total Code:** ~1,200 lines
+- **Source Files:** 15+ TypeScript/TSX files
+- **Main Process:** ~1,000 lines (business logic)
+- **Renderer (React):** ~180 lines (UI components)
 - **Core Logic:** ~200 lines (websocket-client.ts)
-- **Build Time:** ~2 seconds
+- **Build Time:** ~400ms (Vite) + ~1s (main process)
 - **Startup Time:** <1 second
+- **Bundle Size:** ~196KB (includes React)
 
 ---
 

@@ -1,0 +1,16 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "module": "commonjs",
+    "outDir": "./dist",
+    "jsx": "preserve"
+  },
+  "include": [
+    "src/main/**/*",
+    "src/preload/**/*",
+    "src/types/**/*"
+  ],
+  "exclude": [
+    "src/renderer/**/*"
+  ]
+}

@@ -8,25 +8,7 @@
   <link rel="stylesheet" href="./styles.css">
 </head>
 <body>
-  <!-- Top Toolbar (Tabs + Autofill Button) -->
-  <header class="toolbar">
-    <div class="tab-bar" id="tab-bar">
-      <!-- Tabs dynamically rendered here -->
-    </div>
-    <button id="btn-autofill" class="autofill-button" title="Connect to Autofill WebSocket">
-      <span class="autofill-icon">⚡</span>
-      <span class="autofill-text">Autofill</span>
-      <span id="autofill-status" class="autofill-status">●</span>
-    </button>
-  </header>
-  
-  <!-- URL Bar -->
-  <div class="url-bar">
-    <input type="text" id="url-input" class="url-input" placeholder="Enter URL and press Enter...">
-  </div>
-  
-  <!-- Tab content renders in remaining space via BrowserViews -->
-  
-  <script src="./index.js"></script>
+  <div id="root"></div>
+  <script type="module" src="./index.tsx"></script>
 </body>
 </html>
