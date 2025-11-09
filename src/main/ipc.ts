@@ -9,10 +9,6 @@ import { ipcMain, IpcMainInvokeEvent } from 'electron';
 import { IpcChannel } from '../types/ipc.types';
 import { TabsManager } from './tabs';
 import { getConfig, setConfig } from './config';
-import { ToolCall } from '../types/tool.types';
-import { executeTool, setTabsManagerGetter } from './tools/executor';
-import { getAllToolDefinitions } from './tools/registry';
-import { getCdpClient } from './cdp-client';
 import { handleAuthToken } from './auth';
 
 // TabsManager instance (set by windows.ts)
@@ -24,9 +20,6 @@ let tabsManager: TabsManager | null = null;
  */
 export function setTabsManager(manager: TabsManager): void {
   tabsManager = manager;
-  
-  // Also set up the getter for tools
-  setTabsManagerGetter(() => tabsManager);
 }
 
 /**
@@ -54,15 +47,6 @@ export function registerIpcHandlers(): void {
   // Configuration
   ipcMain.handle(IpcChannel.CONFIG_GET, handleConfigGet);
   ipcMain.handle(IpcChannel.CONFIG_SET, handleConfigSet);
-  
-  // Tool Operations
-  ipcMain.handle(IpcChannel.TOOLS_EXECUTE, handleToolExecute);
-  ipcMain.handle(IpcChannel.TOOLS_GET_ALL, handleToolsGetAll);
-  
-  // CDP WebSocket Client Controls
-  ipcMain.handle(IpcChannel.CDP_CONNECT, handleCdpConnect);
-  ipcMain.handle(IpcChannel.CDP_DISCONNECT, handleCdpDisconnect);
-  ipcMain.handle(IpcChannel.CDP_STATUS, handleCdpStatus);
   
   // Authentication
   ipcMain.handle(IpcChannel.AUTH_SEND_TOKEN, handleAuthSendToken);
@@ -172,54 +156,6 @@ async function handleConfigSet(
 // Removed unused: getCachedProfile, setCachedProfile
 
 /**
- * Tool Operation Handlers
- */
-
-async function handleToolExecute(
-  event: IpcMainInvokeEvent,
-  call: ToolCall
-): Promise<any> {
-  return await executeTool(call);
-}
-
-async function handleToolsGetAll(
-  event: IpcMainInvokeEvent
-): Promise<{ tools: any[] }> {
-  const tools = getAllToolDefinitions();
-  return { tools };
-}
-
-/**
- * CDP WebSocket Client Control Handlers
- */
-
-async function handleCdpConnect(
-  event: IpcMainInvokeEvent
-): Promise<void> {
-  const cdpClient = getCdpClient();
-  if (cdpClient) {
-    await cdpClient.connect();
-  }
-}
-
-async function handleCdpDisconnect(
-  event: IpcMainInvokeEvent
-): Promise<void> {
-  const cdpClient = getCdpClient();
-  if (cdpClient) {
-    cdpClient.disconnect();
-  }
-}
-
-async function handleCdpStatus(
-  event: IpcMainInvokeEvent
-): Promise<{ state: string }> {
-  const cdpClient = getCdpClient();
-  const state = cdpClient ? cdpClient.getState() : 'disconnected';
-  return { state };
-}
-
-/**
  * Authentication Handlers
  */
 
@@ -233,3 +169,4 @@ async function handleAuthSendToken(
   console.log('='.repeat(60));
   handleAuthToken(args.token);
 }
+

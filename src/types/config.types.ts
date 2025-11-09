@@ -17,9 +17,8 @@ export interface AppConfig {
   // UI Preferences
   toolbarHeight: number;
   
-  // CDP WebSocket Client (API Control)
-  cdpEnabled: boolean;
-  cdpWebSocketUrl: string;
+  // Automation Server WebSocket
+  automationServerUrl: string;
 }
 
 /**
@@ -29,6 +28,5 @@ export const DEFAULT_CONFIG: AppConfig = {
   startupTabs: ['https://finbro.me'],
   debugMode: false,
   toolbarHeight: 100,
-  cdpEnabled: false,
-  cdpWebSocketUrl: 'ws://127.0.0.1:8000/browser/ws'
+  automationServerUrl: 'ws://127.0.0.1:8000/browser/ws'
 };

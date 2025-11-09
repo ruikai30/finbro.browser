@@ -9,7 +9,6 @@ import { app, BrowserWindow } from 'electron';
 import { createMainWindow } from './windows';
 import { registerIpcHandlers } from './ipc';
 import { getConfig } from './config';
-import { initCdpClient } from './cdp-client';
 
 console.log('='.repeat(60));
 console.log('Finbro Browser - Starting');
@@ -30,19 +29,12 @@ app.whenReady().then(async () => {
   const config = getConfig();
   console.log('[Main] Debug mode:', config.debugMode);
   console.log('[Main] Startup tabs:', config.startupTabs.length);
-  console.log('[Main] CDP client:', config.cdpEnabled ? 'enabled' : 'disabled');
   
   // Register IPC handlers
   registerIpcHandlers();
   
   // Create main window
   await createMainWindow();
-  
-  // Initialize CDP client (but don't auto-connect)
-  console.log('[Main] Initializing CDP client (manual connect only)...');
-  initCdpClient({
-    url: config.cdpWebSocketUrl
-  });
   
   console.log('[Main] Initialization complete');
   

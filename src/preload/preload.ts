@@ -17,11 +17,6 @@ const IpcChannel = {
   TABS_NAVIGATE: 'tabs:navigate',
   CONFIG_GET: 'config:get',
   CONFIG_SET: 'config:set',
-  TOOLS_EXECUTE: 'tools:execute',
-  TOOLS_GET_ALL: 'tools:getAll',
-  CDP_CONNECT: 'cdp:connect',
-  CDP_DISCONNECT: 'cdp:disconnect',
-  CDP_STATUS: 'cdp:status',
   AUTH_SEND_TOKEN: 'auth:send-token',
 } as const;
 
@@ -93,51 +88,6 @@ const finbroApi = {
      */
     set: async (config: any): Promise<void> => {
       return await ipcRenderer.invoke(IpcChannel.CONFIG_SET, { config });
-    }
-  },
-  
-  /**
-   * Tool Operations (AI Agent)
-   */
-  tools: {
-    /**
-     * Execute a tool call
-     */
-    execute: async (call: any): Promise<any> => {
-      return await ipcRenderer.invoke(IpcChannel.TOOLS_EXECUTE, call);
-    },
-    
-    /**
-     * Get all available tools with their schemas
-     */
-    getAll: async (): Promise<{ tools: any[] }> => {
-      return await ipcRenderer.invoke(IpcChannel.TOOLS_GET_ALL);
-    }
-  },
-  
-  /**
-   * CDP WebSocket Client Controls
-   */
-  cdp: {
-    /**
-     * Connect to CDP WebSocket server
-     */
-    connect: async (): Promise<void> => {
-      return await ipcRenderer.invoke(IpcChannel.CDP_CONNECT);
-    },
-    
-    /**
-     * Disconnect from CDP WebSocket server
-     */
-    disconnect: async (): Promise<void> => {
-      return await ipcRenderer.invoke(IpcChannel.CDP_DISCONNECT);
-    },
-    
-    /**
-     * Get CDP connection status
-     */
-    status: async (): Promise<{ state: string }> => {
-      return await ipcRenderer.invoke(IpcChannel.CDP_STATUS);
     }
   },
 

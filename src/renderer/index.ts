@@ -18,15 +18,6 @@ declare global {
         get: () => Promise<{ config: any }>;
         set: (config: any) => Promise<void>;
       };
-      tools: {
-        execute: (call: any) => Promise<any>;
-        getAll: () => Promise<{ tools: any[] }>;
-      };
-      cdp: {
-        connect: () => Promise<void>;
-        disconnect: () => Promise<void>;
-        status: () => Promise<{ state: string }>;
-      };
     };
   }
 }
@@ -40,33 +31,6 @@ const urlInput = document.getElementById('url-input') as HTMLInputElement;
 // State
 let currentTabId: number = -1;
 let tabs: Array<{ id: number; url: string; title?: string }> = [];
-let cdpConnectionState: string = 'disconnected';
-
-/**
- * Update Autofill button status display
- */
-function updateAutofillStatus(state: string): void {
-  cdpConnectionState = state;
-  
-  // Remove all state classes
-  btnAutofill.classList.remove('connected', 'connecting', 'error');
-  
-  switch (state) {
-    case 'connected':
-      btnAutofill.classList.add('connected');
-      break;
-    case 'connecting':
-      btnAutofill.classList.add('connecting');
-      break;
-    case 'error':
-      btnAutofill.classList.add('error');
-      break;
-    case 'disconnected':
-    default:
-      // Default state
-      break;
-  }
-}
 
 /**
  * Get favicon for URL
@@ -242,40 +206,11 @@ async function handleUrlNavigation(): Promise<void> {
 }
 
 /**
- * Poll CDP status
- */
-async function pollCdpStatus(): Promise<void> {
-  try {
-    const { state } = await window.Finbro.cdp.status();
-    updateAutofillStatus(state);
-  } catch (error) {
-    // Silently fail
-  }
-}
-
-/**
- * Handle Autofill button click (toggle CDP connection)
+ * Handle Autofill button click
+ * NOTE: Deprecated - automation is now handled via WebSocket server
  */
 async function handleAutofillClick(): Promise<void> {
-  try {
-    if (cdpConnectionState === 'connected') {
-      // Disconnect
-      await window.Finbro.cdp.disconnect();
-      updateAutofillStatus('disconnected');
-    } else {
-      // Connect
-      updateAutofillStatus('connecting');
-      await window.Finbro.cdp.connect();
-      
-      // Wait a bit and check status
-      await new Promise(resolve => setTimeout(resolve, 500));
-      const { state } = await window.Finbro.cdp.status();
-      updateAutofillStatus(state);
-    }
-  } catch (error) {
-    console.error('[Renderer] CDP connection error:', error);
-    updateAutofillStatus('error');
-  }
+  console.log('[Renderer] Autofill button (deprecated - WebSocket handles automation)');
 }
 
 /**
@@ -298,12 +233,6 @@ async function init(): Promise<void> {
   
   // Poll for tab updates (1 second)
   setInterval(updateTabs, 1000);
-  
-  // Poll for CDP status (2 seconds)
-  setInterval(pollCdpStatus, 2000);
-  
-  // Initial status check
-  pollCdpStatus();
 }
 
 // Start when DOM ready

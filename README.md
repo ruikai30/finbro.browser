@@ -1,37 +1,38 @@
 # Finbro Browser
 
-A minimal Electron-based Chromium browser designed for automated web interactions via CDP (Chrome DevTools Protocol).
+A minimal Electron-based Chromium browser for automated web interactions. Built as a "dumb executor" - all intelligence lives in your server, the browser just executes commands.
 
 ---
 
 ## 🎯 What This Is
 
-**A lightweight browser with one purpose: enable programmatic control via CDP WebSocket.**
+**An ultra-minimal browser controlled via WebSocket + Chrome DevTools Protocol (CDP).**
 
-- **Browser:** Pure execution layer (tabs, navigation, JavaScript injection)
-- **CDP Client:** WebSocket connection for remote control
-- **5 Core Tools:** Tab management + JavaScript execution
-- **Minimal UI:** Tabs, URL bar, and a single "Autofill" button
+- **Browser:** Tab management + CDP command execution
+- **Authentication:** JWT token bridge from finbro.me web app
+- **WebSocket:** Single persistent connection to automation server
+- **Zero Business Logic:** All orchestration happens on the server
 
 ---
 
 ## 🏗️ Architecture
 
 ```
-FastAPI Server (Your Code)
-  - Business Logic
-  - CDP Commands
-  - WebSocket Server
-        ↕
-CDP WebSocket Client
-        ↕
-Finbro Browser (This App)
-  - Tab Management
-  - CDP Command Execution
-  - JavaScript Injection
+Finbro.me Web App
+  └─> Sends JWT token
+        ↓
+Finbro Browser (Electron)
+  ├─> Connects to automation server via WebSocket
+  ├─> Executes tab commands (newTab, switchTab, closeTab)
+  └─> Executes CDP commands (navigate, click, fill forms, etc.)
+        ↓
+FastAPI Automation Server
+  ├─> Orchestrates automation workflows
+  ├─> Sends commands via WebSocket
+  └─> Receives results
 ```
 
-**Key Principle:** The browser has **zero business logic**. All intelligence lives in your server.
+**Key Principle:** The browser is a **stateless executor**. Commands in → Actions → Results out.
 
 ---
 
@@ -42,27 +43,24 @@ finbro.browser/
 ├── src/
 │   ├── main/                    # Electron main process
 │   │   ├── main.ts             # Entry point, app lifecycle
-│   │   ├── windows.ts          # Window management
-│   │   ├── tabs.ts             # Tab management (BrowserView)
-│   │   ├── ipc.ts              # IPC handler registry
+│   │   ├── windows.ts          # Window + tab manager setup
+│   │   ├── tabs.ts             # BrowserView tab management
+│   │   ├── ipc.ts              # Renderer ↔ Main communication
 │   │   ├── config.ts           # Persistent config (electron-store)
-│   │   ├── cdp-client.ts       # CDP WebSocket client
-│   │   └── tools/              # Tool system
-│   │       ├── registry.ts     # Tool definitions
-│   │       └── executor.ts     # Tool execution router
+│   │   ├── auth.ts             # JWT token management
+│   │   └── websocket-client.ts # Unified command handler
 │   │
 │   ├── preload/                # Security bridge
-│   │   └── preload.ts          # Exposes window.Finbro API
+│   │   └── preload.ts          # Exposes window.Finbro + window.finbro
 │   │
 │   ├── renderer/               # UI process
 │   │   ├── index.html          # Main UI structure
-│   │   ├── index.ts            # Tab rendering, CDP button
+│   │   ├── index.ts            # Tab bar rendering
 │   │   └── styles.css          # Minimal styling
 │   │
 │   └── types/                  # TypeScript definitions
-│       ├── tool.types.ts       # Tool schemas
 │       ├── ipc.types.ts        # IPC channels
-│       └── config.types.ts     # Configuration
+│       └── config.types.ts     # Configuration schema
 │
 ├── package.json
 ├── tsconfig.json
@@ -71,88 +69,22 @@ finbro.browser/
 
 ---
 
-## 🤖 5 Core Tools
+## 🔌 WebSocket Protocol
 
-These tools are exposed via the WebSocket connection:
-
-### 1. `newTab`
-Opens a new browser tab.
-```json
-{
-  "tool": "newTab",
-  "params": {
-    "url": "https://example.com",
-    "focus": true  // Optional, default true
-  }
-}
-```
-Returns: `{ "tabId": 1 }`
-
-### 2. `closeTab`
-Closes a tab by ID.
-```json
-{
-  "tool": "closeTab",
-  "params": { "tabId": 1 }
-}
-```
-
-### 3. `switchTab`
-Switches focus to a specific tab.
-```json
-{
-  "tool": "switchTab",
-  "params": { "tabId": 1 }
-}
-```
-
-### 4. `getAllTabs`
-Gets all open tabs.
-```json
-{
-  "tool": "getAllTabs",
-  "params": {}
-}
-```
-Returns: `{ "tabs": [...], "currentTabId": 1 }`
-
-### 5. `executeJS`
-**The most powerful tool** - executes arbitrary JavaScript in a tab.
-```json
-{
-  "tool": "executeJS",
-  "params": {
-    "code": "document.querySelector('#email').value = 'test@example.com'",
-    "tabId": 1  // Optional, defaults to current tab
-  }
-}
-```
-
-**Use cases:**
-- Fill forms: `document.querySelector('#field').value = 'data'`
-- Click buttons: `document.querySelector('#submit').click()`
-- Extract data: `document.querySelectorAll('.item').length`
-- Scroll pages: `window.scrollBy(0, 500)`
-- Get URL: `window.location.href`
-- Get page text: `document.body.innerText`
-
----
-
-## 🔌 CDP WebSocket Protocol
-
-### Connection
-The browser connects to your FastAPI server via WebSocket:
-```
-ws://127.0.0.1:8000/ws/browser
-```
+### Connection Flow
+1. User logs into finbro.me web app
+2. Web app detects Electron via `window.__FINBRO_ENV__.isElectron`
+3. Web app calls `window.finbro.sendAuthToken(jwt)`
+4. Electron connects to `ws://127.0.0.1:8000/browser/ws` with JWT
+5. Server routes commands to this specific browser instance
 
 ### Message Format
 
-**Request (Server → Browser):**
+**Command (Server → Browser):**
 ```json
 {
-  "id": "unique-request-id",
-  "method": "Page.navigate",
+  "id": "unique-command-id",
+  "action": "newTab",
   "params": { "url": "https://example.com" }
 }
 ```
@@ -160,19 +92,102 @@ ws://127.0.0.1:8000/ws/browser
 **Response (Browser → Server):**
 ```json
 {
-  "id": "unique-request-id",
-  "result": { "frameId": "..." }
+  "id": "unique-command-id",
+  "result": { "tabId": 2 }
 }
 ```
 
-### CDP Methods Supported
-The browser executes CDP commands via `webContents.debugger.sendCommand()`:
+**Error Response:**
+```json
+{
+  "id": "unique-command-id",
+  "error": "Tab not found"
+}
+```
+
+---
+
+## 🤖 Supported Commands
+
+### Tab Commands
+
+#### `newTab`
+```json
+{
+  "id": "1",
+  "action": "newTab",
+  "params": {
+    "url": "https://example.com",
+    "focus": true  // Optional, default true
+  }
+}
+```
+**Returns:** `{ "tabId": 2 }`
+
+#### `switchTab`
+```json
+{
+  "id": "2",
+  "action": "switchTab",
+  "params": { "tab_id": 2 }
+}
+```
+**Returns:** `{}`
+
+#### `closeTab`
+```json
+{
+  "id": "3",
+  "action": "closeTab",
+  "params": { "tab_id": 2 }
+}
+```
+**Returns:** `{}`
+
+#### `getAllTabs`
+```json
+{
+  "id": "4",
+  "action": "getAllTabs",
+  "params": {}
+}
+```
+**Returns:** 
+```json
+{
+  "tabs": [
+    { "id": 1, "url": "https://finbro.me", "title": "Finbro" },
+    { "id": 2, "url": "https://example.com", "title": "Example Domain" }
+  ],
+  "current_tab_id": 1
+}
+```
+
+### CDP Commands
+
+Execute any Chrome DevTools Protocol command:
+
+```json
+{
+  "id": "5",
+  "action": "cdp",
+  "params": {
+    "tab_id": 2,
+    "method": "Page.navigate",
+    "args": { "url": "https://github.com" }
+  }
+}
+```
+
+**Common CDP Methods:**
 - `Page.navigate` - Navigate to URL
+- `Page.captureScreenshot` - Take screenshot
 - `Runtime.evaluate` - Execute JavaScript
+- `Input.dispatchKeyEvent` - Type text
+- `Input.dispatchMouseEvent` - Click elements
 - `DOM.getDocument` - Get DOM structure
-- `Input.dispatchMouseEvent` - Simulate clicks
-- `Input.insertText` - Type text
-- And all other standard CDP commands
+
+Full CDP docs: [chromedevtools.github.io/devtools-protocol/](https://chromedevtools.github.io/devtools-protocol/)
 
 ---
 
@@ -185,16 +200,15 @@ The browser executes CDP commands via `webContents.debugger.sendCommand()`:
   "startupTabs": ["https://finbro.me"],
   "debugMode": false,
   "toolbarHeight": 100,
-  "cdpEnabled": false,
-  "cdpWebSocketUrl": "ws://127.0.0.1:8000/ws/browser"
+  "automationServerUrl": "ws://127.0.0.1:8000/browser/ws"
 }
 ```
 
 **Fields:**
 - `startupTabs` - URLs to open on launch
 - `debugMode` - Enable DevTools and verbose logging
-- `cdpEnabled` - Auto-connect to CDP on startup (default: false)
-- `cdpWebSocketUrl` - CDP WebSocket server URL
+- `toolbarHeight` - Tab bar height in pixels
+- `automationServerUrl` - WebSocket server URL
 
 ---
 
@@ -226,9 +240,9 @@ npm run dist
 
 ```
 ┌──────────────────────────────────────────────┐
-│ [Tab 1] [Tab 2] [+]        [⚡ Autofill] ●  │  ← Toolbar (40px)
+│ [Tab 1] [Tab 2] [+]               [Button]  │  ← Tab Bar (40px)
 ├──────────────────────────────────────────────┤
-│ [URL Bar                                   ] │  ← URL Input (36px)
+│ [URL: https://example.com              Go]  │  ← URL Bar (36px)
 ├──────────────────────────────────────────────┤
 │                                              │
 │                                              │
@@ -238,186 +252,146 @@ npm run dist
 └──────────────────────────────────────────────┘
 ```
 
-**Autofill Button:**
-- Click to connect/disconnect CDP WebSocket
-- Purple when disconnected
-- Green when connected
-- Status indicator (●) pulses when connected
+**Features:**
+- Click tabs to switch
+- Click **+** to create new tab
+- Click **✕** on tab to close
+- Type URL and press Enter to navigate
+- Minimal chrome = maximum content
 
 ---
 
 ## 🔐 Security
 
 - **Context Isolation:** ✅ Enabled
-- **Node Integration:** ❌ Disabled
+- **Node Integration:** ❌ Disabled in renderer
 - **Sandbox:** ✅ Enabled
-- **Web Security:** ✅ Enabled (except in debug mode)
-- **Remote Content:** ❌ Only via CDP control
+- **Preload Script:** Exposes minimal, type-safe API
 
-The preload script exposes a minimal, type-safe API (`window.Finbro`) to the renderer.
+**Exposed APIs:**
+- `window.Finbro.tabs.*` - Tab management (for UI)
+- `window.finbro.sendAuthToken()` - JWT bridge (for web app)
 
 ---
 
 ## 📊 Tech Stack
 
-- **Electron:** ^28.0.0 - Desktop app framework
-- **TypeScript:** ^5.3.3 - Type safety
-- **ws:** ^8.18.3 - WebSocket client
-- **electron-store:** ^8.1.0 - Config persistence
+- **Electron:** 28.3.3 - Desktop app framework
+- **TypeScript:** 5.3.3 - Type safety
+- **ws:** 8.18.3 - WebSocket client
+- **electron-store:** 8.1.0 - Config persistence
 
 ---
 
-## 🚀 Use Cases
+## 🚀 Example: Server-Side Python
 
-### 1. Form Automation
 ```python
-# FastAPI server sends CDP command
-await send_cdp_command({
-    "method": "Runtime.evaluate",
-    "params": {
-        "expression": "document.querySelector('#email').value = 'user@example.com'"
-    }
-})
-```
+import asyncio
+from fastapi import WebSocket
 
-### 2. Data Extraction
-```python
-# Extract all job titles
-result = await send_cdp_command({
-    "method": "Runtime.evaluate",
-    "params": {
-        "expression": "Array.from(document.querySelectorAll('.job-title')).map(e => e.textContent)"
-    }
-})
-```
-
-### 3. Multi-tab Workflow
-```python
-# Open multiple tabs
-tab1 = await send_tool("newTab", {"url": "https://site1.com"})
-tab2 = await send_tool("newTab", {"url": "https://site2.com"})
-
-# Work with each tab
-await send_tool("switchTab", {"tabId": tab1})
-await send_tool("executeJS", {"code": "document.title", "tabId": tab1})
+async def automate_form_fill(websocket: WebSocket):
+    """Example: Open tab, fill form, submit"""
+    
+    # 1. Open new tab
+    await websocket.send_json({
+        "id": "1",
+        "action": "newTab",
+        "params": {"url": "https://example.com/form"}
+    })
+    response = await websocket.receive_json()
+    tab_id = response["result"]["tabId"]
+    
+    # 2. Wait for page load (2 seconds)
+    await asyncio.sleep(2)
+    
+    # 3. Fill email field
+    await websocket.send_json({
+        "id": "2",
+        "action": "cdp",
+        "params": {
+            "tab_id": tab_id,
+            "method": "Runtime.evaluate",
+            "args": {
+                "expression": "document.querySelector('#email').value = 'user@example.com'"
+            }
+        }
+    })
+    await websocket.receive_json()
+    
+    # 4. Click submit button
+    await websocket.send_json({
+        "id": "3",
+        "action": "cdp",
+        "params": {
+            "tab_id": tab_id,
+            "method": "Runtime.evaluate",
+            "args": {
+                "expression": "document.querySelector('#submit').click()"
+            }
+        }
+    })
+    await websocket.receive_json()
+    
+    print("✅ Form submitted!")
 ```
 
 ---
 
 ## 🎯 Design Philosophy
 
-**Separation of Concerns:**
-- **This Browser:** Executes commands, manages tabs, zero logic
-- **Your Server:** Contains all business logic, workflows, decisions
+### Ultra-Minimal Architecture
+- **~200 lines** of core logic (websocket-client.ts)
+- **No abstractions** - direct command execution
+- **No tool registry** - just two handlers: tab commands + CDP commands
+- **No routing layers** - message → execute → respond
 
-**Flexibility:**
-- Need to click a button? Use `executeJS`
-- Need to extract data? Use `executeJS`
-- Need custom behavior? Use `executeJS`
+### Separation of Concerns
+- **Browser:** Executes commands, manages tabs
+- **Server:** Orchestrates workflows, makes decisions
+- **Web App:** Handles authentication
 
-**Simplicity:**
-- 5 tools cover everything
-- Minimal UI = maximum screen space
-- Clean architecture = easy maintenance
-
----
-
-## 📝 Example Integration
-
-### FastAPI Server (Your Code)
-```python
-from fastapi import FastAPI, WebSocket
-import json
-
-app = FastAPI()
-
-@app.websocket("/ws/browser")
-async def browser_endpoint(websocket: WebSocket):
-    await websocket.accept()
-    
-    # Send CDP command to navigate
-    await websocket.send_json({
-        "id": "nav-1",
-        "method": "Page.navigate",
-        "params": {"url": "https://example.com"}
-    })
-    
-    # Receive response
-    response = await websocket.receive_json()
-    print(f"Navigation result: {response}")
-    
-    # Execute JavaScript
-    await websocket.send_json({
-        "id": "eval-1",
-        "method": "Runtime.evaluate",
-        "params": {
-            "expression": "document.querySelector('h1').textContent"
-        }
-    })
-    
-    result = await websocket.receive_json()
-    print(f"Page title: {result['result']['value']}")
-```
+### Production-Grade Simplicity
+- Simple code = fewer bugs
+- Direct execution = easier debugging
+- Minimal surface area = better security
 
 ---
 
-## 🔄 Workflow
+## 📈 Stats
 
-```
-1. Launch Finbro Browser
-   ↓
-2. Click "Autofill" button to connect
-   ↓
-3. FastAPI server sends CDP commands
-   ↓
-4. Browser executes commands
-   ↓
-5. Browser returns results
-   ↓
-6. Server makes decisions based on results
-   ↓
-7. Repeat steps 3-6
-```
-
----
-
-## 📈 Metrics
-
-- **Lines of Code:** ~2,000
-- **Source Files:** 14
+- **Source Files:** 11 TypeScript files
+- **Total Code:** ~1,200 lines
+- **Core Logic:** ~200 lines (websocket-client.ts)
 - **Build Time:** ~2 seconds
-- **App Size:** ~150MB (bundled)
 - **Startup Time:** <1 second
 
 ---
 
 ## 🧪 Testing
 
-Launch the browser and test CDP connection:
+### 1. Launch Browser
 ```bash
 npm run dev
 ```
 
-Click the "Autofill" button. If your FastAPI server is running on `ws://127.0.0.1:8000/ws/browser`, it should connect.
+### 2. Authenticate
+- Browser opens https://finbro.me
+- Log in with your account
+- Web app sends JWT to browser automatically
 
-Test tool execution from DevTools console:
-```javascript
-await window.Finbro.tools.execute({
-  tool: 'executeJS',
-  params: { code: 'alert("Hello from CDP!")' }
-});
-```
+### 3. Send Commands
+Your server can now send commands via WebSocket!
 
 ---
 
 ## 🤝 Contributing
 
-This is a minimal, focused browser. Before adding features, ask:
-1. Can this be done via `executeJS`?
-2. Does this belong in the browser or the server?
-3. Does this maintain the clean architecture?
+This is intentionally minimal. Before adding features:
+1. **Can it be done server-side?** (probably yes)
+2. **Does it maintain the "dumb executor" philosophy?**
+3. **Is it truly needed for core functionality?**
 
-If yes to all three, submit a PR!
+If yes to all, submit a PR!
 
 ---
 
@@ -427,12 +401,4 @@ MIT
 
 ---
 
-## 🎓 Learn More
-
-- **Chrome DevTools Protocol:** [chromedevtools.github.io/devtools-protocol/](https://chromedevtools.github.io/devtools-protocol/)
-- **Electron Documentation:** [electronjs.org/docs](https://electronjs.org/docs)
-- **WebSocket RFC:** [RFC 6455](https://datatracker.ietf.org/doc/html/rfc6455)
-
----
-
-**Built for automation. Designed for simplicity. Powered by CDP.** ⚡
+**Built for automation. Designed for simplicity. Powered by Electron + CDP.** ⚡

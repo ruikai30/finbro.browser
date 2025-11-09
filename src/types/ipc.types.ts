@@ -24,15 +24,6 @@ export enum IpcChannel {
   CONFIG_GET = 'config:get',
   CONFIG_SET = 'config:set',
   
-  // Tool Operations (AI Agent)
-  TOOLS_EXECUTE = 'tools:execute',
-  TOOLS_GET_ALL = 'tools:getAll',
-  
-  // CDP WebSocket Client Controls
-  CDP_CONNECT = 'cdp:connect',
-  CDP_DISCONNECT = 'cdp:disconnect',
-  CDP_STATUS = 'cdp:status',
-  
   // Authentication
   AUTH_SEND_TOKEN = 'auth:send-token',
 }
