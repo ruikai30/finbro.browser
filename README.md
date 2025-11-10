@@ -1,4 +1,4 @@
-# Finbro Browser
+# Desktop Browser for finbro.me
 
 **The AI-native browser powering [finbro.me](https://finbro.me)** ⚡
 
@@ -20,6 +20,12 @@ Visit [finbro.me](https://finbro.me/browser) to download the Desktop App.
 npm install
 npm run dev
 ```
+
+## Contributing
+
+We welcome PRs for improvements! Feel free to open a pull request.
+
+For enquiries, email ruikai@finbro.me
 
 ## License
 
