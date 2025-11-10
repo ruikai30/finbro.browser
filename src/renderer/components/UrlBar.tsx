@@ -1,66 +1,34 @@
 /**
  * UrlBar Component (React)
  * 
- * Chrome-style URL bar with current URL display and lock icon.
+ * Premium read-only URL display with security indicator
  */
 
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 
 interface UrlBarProps {
   currentUrl: string;
-  onNavigate: (url: string) => void;
 }
 
-export const UrlBar: React.FC<UrlBarProps> = ({ currentUrl, onNavigate }) => {
-  const [inputValue, setInputValue] = useState('');
-  const [isFocused, setIsFocused] = useState(false);
-
-  // Update input value when currentUrl changes and not focused
-  useEffect(() => {
-    if (!isFocused) {
-      setInputValue('');
-    }
-  }, [currentUrl, isFocused]);
-
-  const handleFocus = () => {
-    setIsFocused(true);
-    setInputValue(currentUrl);
-  };
-
-  const handleBlur = () => {
-    setIsFocused(false);
-    setInputValue('');
-  };
-
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter') {
-      e.preventDefault();
-      let processedUrl = inputValue.trim();
-      
-      if (!processedUrl) return;
-      
-      if (!processedUrl.startsWith('http://') && !processedUrl.startsWith('https://')) {
-        processedUrl = 'https://' + processedUrl;
-      }
-      
-      onNavigate(processedUrl);
-      
-      // Blur the input after navigation
-      (e.target as HTMLInputElement).blur();
-    }
-  };
-
+export const UrlBar: React.FC<UrlBarProps> = ({ currentUrl }) => {
   // Check if URL is HTTPS
   const isSecure = currentUrl.startsWith('https://');
   
-  // Display URL or placeholder
-  const displayValue = isFocused ? inputValue : currentUrl;
-  const placeholder = isFocused ? 'Search or enter URL' : 'Navigate to a website...';
+  // Extract domain for display
+  const getDisplayUrl = (url: string): string => {
+    if (!url) return 'No page loaded';
+    try {
+      const urlObj = new URL(url);
+      return urlObj.hostname + urlObj.pathname + urlObj.search;
+    } catch {
+      return url;
+    }
+  };
 
   return (
     <div className="url-bar">
-      <div className="url-bar-content">
-        {!isFocused && currentUrl && (
+      <div className="url-bar-display">
+        {currentUrl && (
           <span className="url-security-icon" title={isSecure ? 'Secure connection' : 'Not secure'}>
             {isSecure ? (
               <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
@@ -73,16 +41,10 @@ export const UrlBar: React.FC<UrlBarProps> = ({ currentUrl, onNavigate }) => {
             )}
           </span>
         )}
-        <input
-          type="text"
-          className="url-input"
-          placeholder={placeholder}
-          value={displayValue}
-          onChange={(e) => setInputValue(e.target.value)}
-          onKeyDown={handleKeyDown}
-          onFocus={handleFocus}
-          onBlur={handleBlur}
-        />
+        <div className="url-text">
+          {getDisplayUrl(currentUrl)}
+        </div>
+        <div className="url-shimmer"></div>
       </div>
     </div>
   );

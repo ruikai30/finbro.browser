@@ -2,6 +2,8 @@
  * Shared Type Definitions for Renderer
  */
 
+export type TabState = 'in_progress' | 'success' | 'failed';
+
 export interface TabData {
   id: number;
   url: string;
@@ -24,7 +26,8 @@ declare global {
         set: (config: any) => Promise<void>;
       };
       animation: {
-        onStateChange: (callback: (animatingTabIds: number[]) => void) => () => void;
+        getStates: () => Promise<{ states: Record<number, string> }>;
+        onStateChange: (callback: (states: Record<number, string>) => void) => () => void;
       };
     };
   }

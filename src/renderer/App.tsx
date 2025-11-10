@@ -1,19 +1,20 @@
 /**
  * App Component
  * 
- * Main React app - orchestrates TabBar and UrlBar
+ * Main React app - orchestrates TabBar, UrlBar, and StatusBar
  */
 
 import React, { useState, useEffect } from 'react';
 import { TabBar } from './components/TabBar';
 import { UrlBar } from './components/UrlBar';
-import type { TabData } from './types';
+import { StatusBar } from './components/StatusBar';
+import type { TabData, TabState } from './types';
 
 export const App: React.FC = () => {
   const [tabs, setTabs] = useState<TabData[]>([]);
   const [currentTabId, setCurrentTabId] = useState<number>(-1);
   const [currentUrl, setCurrentUrl] = useState<string>('');
-  const [animatingTabIds, setAnimatingTabIds] = useState<Set<number>>(new Set());
+  const [tabStates, setTabStates] = useState<Record<number, TabState>>({});
 
   // Fetch tabs from main process
   const updateTabs = async () => {
@@ -43,12 +44,17 @@ export const App: React.FC = () => {
   
   // Listen for animation state changes
   useEffect(() => {
-    const cleanup = window.Finbro.animation.onStateChange((tabIds) => {
-      setAnimatingTabIds(new Set(tabIds));
+    const cleanup = window.Finbro.animation.onStateChange((states) => {
+      setTabStates(states as Record<number, TabState>);
     });
     
     return cleanup;
   }, []);
+  
+  // Calculate status counts
+  const inProgressCount = Object.values(tabStates).filter(state => state === 'in_progress').length;
+  const successCount = Object.values(tabStates).filter(state => state === 'success').length;
+  const failedCount = Object.values(tabStates).filter(state => state === 'failed').length;
 
   // Handlers
   const handleTabSwitch = async (tabId: number) => {
@@ -78,29 +84,26 @@ export const App: React.FC = () => {
     }
   };
 
-  const handleNavigate = async (url: string) => {
-    try {
-      if (currentTabId >= 0) {
-        await window.Finbro.tabs.navigate(currentTabId, url);
-      }
-    } catch (error) {
-      console.error('[App] Failed to navigate:', error);
-    }
-  };
-
   return (
     <>
       <header className="toolbar">
         <TabBar
           tabs={tabs}
           currentTabId={currentTabId}
-          animatingTabIds={animatingTabIds}
+          tabStates={tabStates}
           onTabSwitch={handleTabSwitch}
           onTabClose={handleTabClose}
           onNewTab={handleNewTab}
         />
       </header>
-      <UrlBar currentUrl={currentUrl} onNavigate={handleNavigate} />
+      <div className="urlbar-status-container">
+        <UrlBar currentUrl={currentUrl} />
+        <StatusBar
+          inProgressCount={inProgressCount}
+          successCount={successCount}
+          failedCount={failedCount}
+        />
+      </div>
     </>
   );
 };

@@ -109,12 +109,19 @@ const finbroApi = {
    */
   animation: {
     /**
-     * Listen for animation state changes
-     * @param callback - Called with array of animating tab IDs
+     * Get current animation states
      */
-    onStateChange: (callback: (animatingTabIds: number[]) => void): (() => void) => {
-      const handler = (_event: any, animatingTabIds: number[]) => {
-        callback(animatingTabIds);
+    getStates: async (): Promise<{ states: Record<number, string> }> => {
+      return await ipcRenderer.invoke('animation:get-states');
+    },
+    
+    /**
+     * Listen for animation state changes
+     * @param callback - Called with object mapping tab IDs to their states
+     */
+    onStateChange: (callback: (states: Record<number, string>) => void): (() => void) => {
+      const handler = (_event: any, states: Record<number, string>) => {
+        callback(states);
       };
       ipcRenderer.on('animation:state-changed', handler);
       

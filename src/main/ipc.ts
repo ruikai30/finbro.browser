@@ -38,14 +38,37 @@ export function getTabsManager(): TabsManager | null {
   return tabsManager;
 }
 
+// Store current states for IPC access
+type TabState = 'in_progress' | 'success' | 'failed';
+let currentTabStates = new Map<number, TabState>();
+
 /**
  * Notify renderer of animation state change
- * @param animatingTabIds - Array of tab IDs currently animating
+ * @param states - Map of tab IDs to their current states
  */
-export function notifyAnimationStateChange(animatingTabIds: number[]): void {
+export function notifyAnimationStateChange(states: Map<number, TabState>): void {
+  currentTabStates = new Map(states);
+  
   if (mainWindow && !mainWindow.isDestroyed()) {
-    mainWindow.webContents.send('animation:state-changed', animatingTabIds);
+    // Convert Map to object for IPC transfer
+    const statesObj: Record<number, TabState> = {};
+    states.forEach((state, tabId) => {
+      statesObj[tabId] = state;
+    });
+    
+    mainWindow.webContents.send('animation:state-changed', statesObj);
   }
+}
+
+/**
+ * Get current tab states
+ */
+function getTabStates(): Record<number, TabState> {
+  const statesObj: Record<number, TabState> = {};
+  currentTabStates.forEach((state, tabId) => {
+    statesObj[tabId] = state;
+  });
+  return statesObj;
 }
 
 /**
@@ -70,7 +93,20 @@ export function registerIpcHandlers(): void {
   // Authentication
   ipcMain.handle(IpcChannel.AUTH_SEND_TOKEN, handleAuthSendToken);
   
+  // Animation States
+  ipcMain.handle('animation:get-states', handleGetAnimationStates);
+  
   console.log('[IPC] All handlers registered');
+}
+
+/**
+ * Animation State Handlers
+ */
+
+async function handleGetAnimationStates(
+  event: IpcMainInvokeEvent
+): Promise<{ states: Record<number, TabState> }> {
+  return { states: getTabStates() };
 }
 
 /**

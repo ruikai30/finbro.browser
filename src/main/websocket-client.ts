@@ -13,14 +13,15 @@ let ws: WebSocket | null = null;
 let currentToken: string | null = null;
 let reconnectTimeout: NodeJS.Timeout | null = null;
 
-// Track animating tabs
-const animatingTabs = new Set<number>();
+// Track tab states: in_progress, success, failed
+type TabState = 'in_progress' | 'success' | 'failed';
+const tabStates = new Map<number, TabState>();
 
 const RECONNECT_DELAY = 5000;
 const NORMAL_CLOSURE = 1000;
 
 // Import notifyAnimationStateChange at runtime to avoid circular dependency
-let notifyAnimationStateChange: (tabIds: number[]) => void;
+let notifyAnimationStateChange: (states: Map<number, TabState>) => void;
 
 // Lazy load the IPC notification function
 function getNotifyFunction() {
@@ -160,27 +161,31 @@ function handleAnimationMessage(message: any): void {
     return;
   }
   
-  if (action === 'start') {
-    animatingTabs.add(tab_id);
-    console.log('[WebSocket] ✨ Animation started for tab:', tab_id);
-    injectAnimationCSS(tab_id);
-  } else if (action === 'stop') {
-    animatingTabs.delete(tab_id);
-    console.log('[WebSocket] ⏹️  Animation stopped for tab:', tab_id);
+  if (action === 'in_progress') {
+    tabStates.set(tab_id, 'in_progress');
+    console.log('[WebSocket] ✨ In progress for tab:', tab_id);
+    injectInProgressCSS(tab_id);
+  } else if (action === 'success') {
+    tabStates.set(tab_id, 'success');
+    console.log('[WebSocket] ✅ Success for tab:', tab_id);
+    removeAnimationCSS(tab_id);
+  } else if (action === 'failed') {
+    tabStates.set(tab_id, 'failed');
+    console.log('[WebSocket] ❌ Failed for tab:', tab_id);
     removeAnimationCSS(tab_id);
   } else {
     console.warn('[WebSocket] Unknown animation action:', action);
     return;
   }
   
-  // Notify renderer of animation state change
-  getNotifyFunction()(Array.from(animatingTabs));
+  // Notify renderer of state change
+  getNotifyFunction()(new Map(tabStates));
 }
 
 /**
- * Inject purple ambient gradient animation CSS into a tab's web page
+ * Inject purple ambient gradient animation CSS into a tab's web page (in_progress state)
  */
-function injectAnimationCSS(tabId: number): void {
+function injectInProgressCSS(tabId: number): void {
   const tabsManager = getTabsManager();
   if (!tabsManager) {
     console.warn('[WebSocket] Cannot inject CSS - TabsManager not available');
@@ -273,15 +278,15 @@ function injectAnimationCSS(tabId: number): void {
   
   tab.view.webContents.insertCSS(css).then((key) => {
     // Store the key to remove it later
-    (tab as any).animationCSSKey = key;
-    console.log('[WebSocket] 💉 Successfully injected animation CSS into tab:', tabId, 'key:', key);
+    (tab as any).inProgressCSSKey = key;
+    console.log('[WebSocket] 💉 Successfully injected in_progress CSS into tab:', tabId, 'key:', key);
   }).catch((err) => {
     console.error('[WebSocket] ❌ Failed to inject CSS:', err);
   });
 }
 
 /**
- * Remove purple edge glow CSS from a tab's web page
+ * Remove injected in_progress CSS from a tab's web page
  */
 function removeAnimationCSS(tabId: number): void {
   const tabsManager = getTabsManager();
@@ -290,11 +295,11 @@ function removeAnimationCSS(tabId: number): void {
   const tab = tabsManager.getTab(tabId);
   if (!tab) return;
   
-  const cssKey = (tab as any).animationCSSKey;
-  if (cssKey) {
-    tab.view.webContents.removeInsertedCSS(cssKey).then(() => {
-      delete (tab as any).animationCSSKey;
-      console.log('[WebSocket] 🧹 Removed animation CSS from tab:', tabId);
+  const inProgressKey = (tab as any).inProgressCSSKey;
+  if (inProgressKey) {
+    tab.view.webContents.removeInsertedCSS(inProgressKey).then(() => {
+      delete (tab as any).inProgressCSSKey;
+      console.log('[WebSocket] 🧹 Removed in_progress CSS from tab:', tabId);
     }).catch((err) => {
       console.error('[WebSocket] Failed to remove CSS:', err);
     });
@@ -449,6 +454,20 @@ function sendError(id: string, error: string): void {
   console.error('[WebSocket] 📤 Sent error for:', id, '-', error);
 }
 
+/**
+ * Called when a tab is closed to clean up its state
+ */
+export function onTabClosed(tabId: number): void {
+  if (tabStates.has(tabId)) {
+    removeAnimationCSS(tabId);
+    tabStates.delete(tabId);
+    console.log('[WebSocket] 🧹 Cleaned up state for closed tab:', tabId);
+    
+    // Notify renderer of state change
+    getNotifyFunction()(new Map(tabStates));
+  }
+}
+
 export function disconnectWebSocket(): void {
   if (reconnectTimeout) {
     clearTimeout(reconnectTimeout);
@@ -463,13 +482,13 @@ export function disconnectWebSocket(): void {
   console.log('[WebSocket] 🔌 Disconnecting from automation server...');
   
   // Clear all animations and remove injected CSS
-  const tabsToClean = Array.from(animatingTabs);
+  const tabsToClean = Array.from(tabStates.keys());
   tabsToClean.forEach(tabId => {
     removeAnimationCSS(tabId);
   });
   
-  animatingTabs.clear();
-  getNotifyFunction()([]);
+  tabStates.clear();
+  getNotifyFunction()(new Map());
   console.log('[WebSocket] 🧹 Cleared all animations');
   
   // TODO: Show disconnect notification UI to user

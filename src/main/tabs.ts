@@ -143,6 +143,14 @@ export class TabsManager {
     
     const tab = this.tabs[index];
     
+    // Notify websocket client to clean up state
+    try {
+      const { onTabClosed } = require('./websocket-client');
+      onTabClosed(tabId);
+    } catch (error) {
+      console.error('[Tabs] Failed to notify websocket of tab closure:', error);
+    }
+    
     // Remove from window
     this.window.removeBrowserView(tab.view);
     

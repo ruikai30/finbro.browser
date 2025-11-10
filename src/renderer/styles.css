@@ -86,10 +86,10 @@ body {
 }
 
 /* ============================================================
-   URL BAR - Chrome-style Professional Design
+   URL BAR & STATUS BAR CONTAINER
    ============================================================ */
 
-.url-bar {
+.urlbar-status-container {
   position: fixed;
   top: var(--toolbar-height);
   left: 0;
@@ -102,57 +102,240 @@ body {
   z-index: 100;
   padding: 8px 16px;
   box-shadow: 0 2px 4px rgba(139, 92, 246, 0.06);
+  display: flex;
+  gap: 12px;
+  align-items: center;
 }
 
-.url-bar-content {
+/* ============================================================
+   URL BAR - Chrome-style Professional Design
+   ============================================================ */
+
+.url-bar {
+  flex: 1;
+  height: 100%;
+  display: flex;
+  align-items: center;
+}
+
+.url-bar-display {
   width: 100%;
   height: 100%;
   display: flex;
   align-items: center;
   gap: 10px;
-  background: rgba(255, 255, 255, 0.6);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  border: 1px solid rgba(139, 92, 246, 0.2);
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.65) 0%,
+    rgba(255, 255, 255, 0.55) 50%,
+    rgba(255, 255, 255, 0.65) 100%
+  );
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(139, 92, 246, 0.25);
   border-radius: 12px;
   padding: 0 14px;
+  position: relative;
+  overflow: hidden;
   transition: all 0.3s var(--transition-smooth);
   box-shadow: 
-    0 2px 4px rgba(0, 0, 0, 0.04),
-    inset 0 1px 2px rgba(255, 255, 255, 0.5);
+    0 2px 6px rgba(139, 92, 246, 0.08),
+    inset 0 1px 2px rgba(255, 255, 255, 0.6),
+    inset 0 -1px 1px rgba(139, 92, 246, 0.05);
 }
 
-.url-bar-content:focus-within {
-  background: rgba(255, 255, 255, 0.85);
-  border-color: var(--finbro-purple-400);
-  box-shadow: 
-    0 4px 12px rgba(139, 92, 246, 0.15),
-    inset 0 1px 2px rgba(255, 255, 255, 0.8);
-  transform: translateY(-1px);
+.url-bar-display::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.8),
+    transparent
+  );
+  opacity: 0.6;
 }
 
 .url-security-icon {
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--finbro-grey-600);
+  color: var(--finbro-purple-600);
   flex-shrink: 0;
+  filter: drop-shadow(0 1px 2px rgba(139, 92, 246, 0.2));
 }
 
-.url-input {
+.url-text {
   flex: 1;
-  border: none;
-  background: transparent;
-  outline: none;
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 500;
-  color: var(--finbro-grey-900);
+  color: var(--finbro-grey-800);
   letter-spacing: -0.01em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  user-select: text;
+  text-shadow: 0 1px 1px rgba(255, 255, 255, 0.5);
 }
 
-.url-input::placeholder {
-  color: var(--finbro-grey-400);
-  font-weight: 400;
+/* Subtle shimmer effect */
+.url-shimmer {
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.3) 50%,
+    transparent 100%
+  );
+  animation: url-shimmer 8s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@keyframes url-shimmer {
+  0% {
+    left: -100%;
+    opacity: 0;
+  }
+  10% {
+    opacity: 0.4;
+  }
+  50% {
+    left: 100%;
+    opacity: 0.4;
+  }
+  60% {
+    opacity: 0;
+  }
+  100% {
+    left: 100%;
+    opacity: 0;
+  }
+}
+
+/* ============================================================
+   STATUS BAR - Mini Tab-Style Status Badges
+   ============================================================ */
+
+.status-bar {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  padding: 0;
+  height: 100%;
+}
+
+/* Status Badge - Mini Tab Style */
+.status-badge {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 28px;
+  padding: 0 10px;
+  background: rgba(255, 255, 255, 0.3);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: 8px;
+  font-size: 11px;
+  font-weight: 500;
+  white-space: nowrap;
+  transition: all 0.2s var(--transition-smooth);
+  box-shadow: 
+    0 2px 3px rgba(0, 0, 0, 0.04),
+    inset 0 1px 1px rgba(255, 255, 255, 0.4);
+  position: relative;
+  overflow: hidden;
+}
+
+.status-badge-label {
+  color: var(--finbro-grey-700);
+  letter-spacing: -0.01em;
+  font-weight: 500;
+}
+
+.status-badge-count {
+  font-weight: 700;
+  min-width: 14px;
+  text-align: center;
+  font-size: 12px;
+  padding: 2px 6px;
+  border-radius: 5px;
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+
+/* In Progress Badge - Purple Shaded */
+.status-badge-in-progress {
+  background: rgba(139, 92, 246, 0.25);
+  border-color: rgba(139, 92, 246, 0.35);
+  box-shadow: 
+    0 2px 4px rgba(139, 92, 246, 0.15),
+    inset 0 1px 1px rgba(255, 255, 255, 0.3);
+}
+
+.status-badge-in-progress .status-badge-label {
+  color: var(--finbro-purple-800);
+}
+
+.status-badge-in-progress .status-badge-count {
+  background: rgba(139, 92, 246, 0.35);
+  color: var(--finbro-purple-900);
+  font-weight: 800;
+  box-shadow: 
+    0 1px 2px rgba(139, 92, 246, 0.2),
+    inset 0 1px 1px rgba(255, 255, 255, 0.2);
+}
+
+/* Success Badge - Green Shaded */
+.status-badge-success {
+  background: rgba(16, 185, 129, 0.2);
+  border-color: rgba(16, 185, 129, 0.3);
+  box-shadow: 
+    0 2px 4px rgba(16, 185, 129, 0.12),
+    inset 0 1px 1px rgba(255, 255, 255, 0.3);
+}
+
+.status-badge-success .status-badge-label {
+  color: #047857;
+}
+
+.status-badge-success .status-badge-count {
+  background: rgba(16, 185, 129, 0.3);
+  color: #064e3b;
+  font-weight: 800;
+  box-shadow: 
+    0 1px 2px rgba(16, 185, 129, 0.2),
+    inset 0 1px 1px rgba(255, 255, 255, 0.2);
+}
+
+/* Failed Badge - Red Shaded */
+.status-badge-failed {
+  background: rgba(239, 68, 68, 0.2);
+  border-color: rgba(239, 68, 68, 0.3);
+  box-shadow: 
+    0 2px 4px rgba(239, 68, 68, 0.12),
+    inset 0 1px 1px rgba(255, 255, 255, 0.3);
+}
+
+.status-badge-failed .status-badge-label {
+  color: #b91c1c;
+}
+
+.status-badge-failed .status-badge-count {
+  background: rgba(239, 68, 68, 0.3);
+  color: #7f1d1d;
+  font-weight: 800;
+  box-shadow: 
+    0 1px 2px rgba(239, 68, 68, 0.2),
+    inset 0 1px 1px rgba(255, 255, 255, 0.2);
 }
 
 /* ============================================================
@@ -244,24 +427,16 @@ body {
 }
 
 .tab.active {
-  background: rgba(255, 255, 255, 0.85);
-  border-color: rgba(139, 92, 246, 0.4);
+  background: rgba(255, 255, 255, 0.95);
+  border-color: rgba(0, 0, 0, 0.08);
   color: var(--finbro-grey-900);
   height: 38px;
+  transform: translateY(-2px);
   box-shadow: 
-    0 4px 12px rgba(139, 92, 246, 0.15),
-    inset 0 1px 2px rgba(255, 255, 255, 0.8);
+    0 8px 16px rgba(0, 0, 0, 0.12),
+    0 2px 4px rgba(0, 0, 0, 0.08),
+    inset 0 1px 2px rgba(255, 255, 255, 0.9);
   z-index: 10;
-}
-
-.tab.active::before {
-  opacity: 1;
-  background: linear-gradient(90deg, 
-    transparent, 
-    var(--finbro-purple-400), 
-    transparent
-  );
-  height: 2px;
 }
 
 /* Tab Favicon - Professional Circle */
@@ -398,19 +573,20 @@ body {
 }
 
 /* ============================================================
-   AI ANIMATION SYSTEM - Elite Purple Glow
+   TAB STATES - In Progress / Success / Failed
    ============================================================ */
 
-.tab.animating {
+/* In Progress State - Purple Gleam Animation */
+.tab.state-in_progress {
   position: relative;
   overflow: hidden;
   background: rgba(139, 92, 246, 0.35) !important;
   backdrop-filter: blur(10px);
   border-color: rgba(139, 92, 246, 0.8) !important;
-  animation: tab-pulse 2s ease-in-out infinite;
+  animation: tab-pulse-purple 3s ease-in-out infinite;
 }
 
-@keyframes tab-pulse {
+@keyframes tab-pulse-purple {
   0%, 100% {
     box-shadow: 
       0 2px 4px rgba(0, 0, 0, 0.05),
@@ -427,44 +603,131 @@ body {
   }
 }
 
-/* Gleam Animation - Ultra Premium Sweep */
+/* Success State - Elegant Green */
+.tab.state-success {
+  position: relative;
+  overflow: hidden;
+  background: rgba(16, 185, 129, 0.25) !important;
+  backdrop-filter: blur(10px);
+  border-color: rgba(16, 185, 129, 0.6) !important;
+  box-shadow: 
+    0 2px 4px rgba(0, 0, 0, 0.05),
+    0 0 20px rgba(16, 185, 129, 0.3),
+    inset 0 1px 1px rgba(255, 255, 255, 0.4) !important;
+}
+
+.tab.state-success .tab-favicon {
+  background: linear-gradient(135deg, 
+    #10b981, 
+    #059669
+  ) !important;
+  box-shadow: 
+    0 2px 4px rgba(16, 185, 129, 0.4),
+    inset 0 1px 1px rgba(255, 255, 255, 0.3) !important;
+}
+
+.tab.state-success.active {
+  background: rgba(16, 185, 129, 0.35) !important;
+  border-color: rgba(16, 185, 129, 0.7) !important;
+  transform: translateY(-2px);
+  box-shadow: 
+    0 8px 16px rgba(16, 185, 129, 0.2),
+    0 4px 12px rgba(16, 185, 129, 0.3),
+    0 0 30px rgba(16, 185, 129, 0.4),
+    inset 0 1px 2px rgba(255, 255, 255, 0.6) !important;
+}
+
+/* Failed State - Refined Red */
+.tab.state-failed {
+  position: relative;
+  overflow: hidden;
+  background: rgba(239, 68, 68, 0.25) !important;
+  backdrop-filter: blur(10px);
+  border-color: rgba(239, 68, 68, 0.6) !important;
+  box-shadow: 
+    0 2px 4px rgba(0, 0, 0, 0.05),
+    0 0 20px rgba(239, 68, 68, 0.3),
+    inset 0 1px 1px rgba(255, 255, 255, 0.4) !important;
+  animation: tab-pulse-red 2s ease-in-out infinite;
+}
+
+@keyframes tab-pulse-red {
+  0%, 100% {
+    box-shadow: 
+      0 2px 4px rgba(0, 0, 0, 0.05),
+      0 0 20px rgba(239, 68, 68, 0.3),
+      inset 0 1px 1px rgba(255, 255, 255, 0.4);
+  }
+  50% {
+    box-shadow: 
+      0 3px 6px rgba(0, 0, 0, 0.07),
+      0 0 28px rgba(239, 68, 68, 0.45),
+      inset 0 1px 1px rgba(255, 255, 255, 0.5);
+  }
+}
+
+.tab.state-failed .tab-favicon {
+  background: linear-gradient(135deg, 
+    #ef4444, 
+    #dc2626
+  ) !important;
+  box-shadow: 
+    0 2px 4px rgba(239, 68, 68, 0.4),
+    inset 0 1px 1px rgba(255, 255, 255, 0.3) !important;
+}
+
+.tab.state-failed.active {
+  background: rgba(239, 68, 68, 0.35) !important;
+  border-color: rgba(239, 68, 68, 0.7) !important;
+  transform: translateY(-2px);
+  box-shadow: 
+    0 8px 16px rgba(239, 68, 68, 0.2),
+    0 4px 12px rgba(239, 68, 68, 0.3),
+    0 0 30px rgba(239, 68, 68, 0.4),
+    inset 0 1px 2px rgba(255, 255, 255, 0.6) !important;
+}
+
+/* Gleam Animation - Ultra Premium Sweep (Improved) */
 .tab-gleam {
   position: absolute;
-  top: 0;
-  left: -150%;
-  width: 150%;
-  height: 100%;
+  top: -50%;
+  left: -200%;
+  width: 200%;
+  height: 200%;
   background: linear-gradient(
-    90deg,
+    105deg,
     transparent 0%,
-    rgba(255, 255, 255, 0.3) 40%,
-    rgba(139, 92, 246, 0.7) 50%,
-    rgba(255, 255, 255, 0.3) 60%,
+    transparent 30%,
+    rgba(255, 255, 255, 0.2) 40%,
+    rgba(139, 92, 246, 0.6) 50%,
+    rgba(255, 255, 255, 0.2) 60%,
+    transparent 70%,
     transparent 100%
   );
-  animation: tab-gleam-sweep 4s ease-in-out infinite;
+  animation: tab-gleam-sweep 8s ease-in-out infinite;
   pointer-events: none;
   z-index: 1;
-  filter: blur(8px);
+  filter: blur(12px);
+  transform: skewX(-15deg);
 }
 
 @keyframes tab-gleam-sweep {
   0% {
-    left: -150%;
+    left: -200%;
     opacity: 0;
   }
-  10% {
-    opacity: 1;
+  5% {
+    opacity: 0.8;
   }
-  40% {
-    left: 110%;
-    opacity: 1;
+  45% {
+    left: 150%;
+    opacity: 0.8;
   }
   50% {
     opacity: 0;
   }
   100% {
-    left: 110%;
+    left: 150%;
     opacity: 0;
   }
 }
@@ -505,10 +768,12 @@ body {
   }
 }
 
-.tab.animating.active {
+.tab.state-in_progress.active {
   background: rgba(139, 92, 246, 0.45) !important;
   border-color: var(--finbro-purple-500) !important;
+  transform: translateY(-2px);
   box-shadow: 
+    0 8px 16px rgba(139, 92, 246, 0.25),
     0 4px 12px rgba(139, 92, 246, 0.4),
     0 0 30px rgba(139, 92, 246, 0.5),
     inset 0 1px 2px rgba(255, 255, 255, 0.6) !important;
