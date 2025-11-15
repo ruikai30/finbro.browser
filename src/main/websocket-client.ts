@@ -164,15 +164,15 @@ function handleAnimationMessage(message: any): void {
   if (action === 'in_progress') {
     tabStates.set(tab_id, 'in_progress');
     console.log('[WebSocket] ✨ In progress for tab:', tab_id);
-    injectInProgressCSS(tab_id);
+    tabsManager.showOverlay(tab_id);
   } else if (action === 'success') {
     tabStates.set(tab_id, 'success');
     console.log('[WebSocket] ✅ Success for tab:', tab_id);
-    removeAnimationCSS(tab_id);
+    tabsManager.hideOverlay(tab_id);
   } else if (action === 'failed') {
     tabStates.set(tab_id, 'failed');
     console.log('[WebSocket] ❌ Failed for tab:', tab_id);
-    removeAnimationCSS(tab_id);
+    tabsManager.hideOverlay(tab_id);
   } else {
     console.warn('[WebSocket] Unknown animation action:', action);
     return;
@@ -182,129 +182,6 @@ function handleAnimationMessage(message: any): void {
   getNotifyFunction()(new Map(tabStates));
 }
 
-/**
- * Inject purple ambient gradient animation CSS into a tab's web page (in_progress state)
- */
-function injectInProgressCSS(tabId: number): void {
-  const tabsManager = getTabsManager();
-  if (!tabsManager) {
-    console.warn('[WebSocket] Cannot inject CSS - TabsManager not available');
-    return;
-  }
-  
-  const tab = tabsManager.getTab(tabId);
-  if (!tab) {
-    console.warn('[WebSocket] Cannot inject CSS - tab not found:', tabId);
-    return;
-  }
-  
-  const css = `
-    @keyframes finbro-ambient-glow {
-      0%, 100% {
-        background-position: 0% 0%, 100% 0%, 100% 100%, 0% 100%;
-        opacity: 0.7;
-      }
-      25% {
-        background-position: 100% 0%, 100% 100%, 0% 100%, 0% 0%;
-        opacity: 0.9;
-      }
-      50% {
-        background-position: 100% 100%, 0% 100%, 0% 0%, 100% 0%;
-        opacity: 0.8;
-      }
-      75% {
-        background-position: 0% 100%, 0% 0%, 100% 0%, 100% 100%;
-        opacity: 1;
-      }
-    }
-    
-    @keyframes finbro-corner-pulse {
-      0%, 100% {
-        transform: scale(1) rotate(0deg);
-        opacity: 0.8;
-      }
-      50% {
-        transform: scale(1.1) rotate(5deg);
-        opacity: 1;
-      }
-    }
-    
-    html::before {
-      content: '' !important;
-      position: fixed !important;
-      top: 0 !important;
-      left: 0 !important;
-      right: 0 !important;
-      bottom: 0 !important;
-      pointer-events: none !important;
-      z-index: 2147483647 !important;
-      background: 
-        radial-gradient(ellipse 600px 500px at 0% 0%, rgba(139, 92, 246, 0.65), transparent 70%),
-        radial-gradient(ellipse 600px 500px at 100% 0%, rgba(124, 58, 237, 0.6), transparent 70%),
-        radial-gradient(ellipse 600px 500px at 100% 100%, rgba(139, 92, 246, 0.7), transparent 70%),
-        radial-gradient(ellipse 600px 500px at 0% 100%, rgba(167, 139, 250, 0.65), transparent 70%) !important;
-      background-size: 600px 500px, 600px 500px, 600px 500px, 600px 500px !important;
-      background-repeat: no-repeat !important;
-      animation: finbro-ambient-glow 8s ease-in-out infinite !important;
-      box-sizing: border-box !important;
-      filter: blur(60px) !important;
-    }
-    
-    html::after {
-      content: '' !important;
-      position: fixed !important;
-      top: 0 !important;
-      left: 0 !important;
-      right: 0 !important;
-      bottom: 0 !important;
-      pointer-events: none !important;
-      z-index: 2147483646 !important;
-      border: 5px solid transparent !important;
-      border-image: linear-gradient(
-        135deg,
-        rgba(139, 92, 246, 0.8),
-        rgba(167, 139, 250, 0.6),
-        rgba(124, 58, 237, 0.75),
-        rgba(139, 92, 246, 0.8)
-      ) 1 !important;
-      box-sizing: border-box !important;
-      animation: finbro-corner-pulse 3s ease-in-out infinite !important;
-      box-shadow: 
-        inset 0 0 100px rgba(139, 92, 246, 0.5),
-        inset 0 0 160px rgba(167, 139, 250, 0.35),
-        0 0 60px rgba(139, 92, 246, 0.6) !important;
-    }
-  `;
-  
-  tab.view.webContents.insertCSS(css).then((key) => {
-    // Store the key to remove it later
-    (tab as any).inProgressCSSKey = key;
-    console.log('[WebSocket] 💉 Successfully injected in_progress CSS into tab:', tabId, 'key:', key);
-  }).catch((err) => {
-    console.error('[WebSocket] ❌ Failed to inject CSS:', err);
-  });
-}
-
-/**
- * Remove injected in_progress CSS from a tab's web page
- */
-function removeAnimationCSS(tabId: number): void {
-  const tabsManager = getTabsManager();
-  if (!tabsManager) return;
-  
-  const tab = tabsManager.getTab(tabId);
-  if (!tab) return;
-  
-  const inProgressKey = (tab as any).inProgressCSSKey;
-  if (inProgressKey) {
-    tab.view.webContents.removeInsertedCSS(inProgressKey).then(() => {
-      delete (tab as any).inProgressCSSKey;
-      console.log('[WebSocket] 🧹 Removed in_progress CSS from tab:', tabId);
-    }).catch((err) => {
-      console.error('[WebSocket] Failed to remove CSS:', err);
-    });
-  }
-}
 
 async function executeTabCommand(id: string, action: string, params: any): Promise<void> {
   const tabsManager = getTabsManager();
@@ -459,7 +336,6 @@ function sendError(id: string, error: string): void {
  */
 export function onTabClosed(tabId: number): void {
   if (tabStates.has(tabId)) {
-    removeAnimationCSS(tabId);
     tabStates.delete(tabId);
     console.log('[WebSocket] 🧹 Cleaned up state for closed tab:', tabId);
     
@@ -481,11 +357,14 @@ export function disconnectWebSocket(): void {
   
   console.log('[WebSocket] 🔌 Disconnecting from automation server...');
   
-  // Clear all animations and remove injected CSS
-  const tabsToClean = Array.from(tabStates.keys());
-  tabsToClean.forEach(tabId => {
-    removeAnimationCSS(tabId);
-  });
+  // Clear all animations and hide overlays
+  const tabsManager = getTabsManager();
+  if (tabsManager) {
+    const tabsToClean = Array.from(tabStates.keys());
+    tabsToClean.forEach(tabId => {
+      tabsManager.hideOverlay(tabId);
+    });
+  }
   
   tabStates.clear();
   getNotifyFunction()(new Map());

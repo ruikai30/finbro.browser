@@ -15,6 +15,7 @@ import * as path from 'path';
 interface Tab {
   id: number;
   view: BrowserView;
+  overlayView?: BrowserView;
   url: string;
   title?: string;
 }
@@ -104,7 +105,7 @@ export class TabsManager {
       return;
     }
     
-    // Remove all BrowserViews first to prevent overlapping
+    // Remove all BrowserViews (main + overlay) first to prevent overlapping
     for (const t of this.tabs) {
       try {
         this.window.removeBrowserView(t.view);
@@ -114,11 +115,28 @@ export class TabsManager {
           console.log('[Tabs] View not in window (expected):', t.id);
         }
       }
+      
+      // Also remove overlay if present
+      if (t.overlayView) {
+        try {
+          this.window.removeBrowserView(t.overlayView);
+        } catch (error) {
+          // Overlay might not be in window, which is fine
+        }
+      }
     }
     
-    // Add and show only the selected tab
+    // Add and show the selected tab's main view
     this.window.addBrowserView(tab.view);
-    this.window.setTopBrowserView(tab.view);
+    
+    // If tab has an overlay, add it on top
+    if (tab.overlayView) {
+      this.window.addBrowserView(tab.overlayView);
+      this.window.setTopBrowserView(tab.overlayView);
+    } else {
+      this.window.setTopBrowserView(tab.view);
+    }
+    
     this.currentTabId = tabId;
     
     // Layout the tab to ensure proper bounds
@@ -149,6 +167,16 @@ export class TabsManager {
       onTabClosed(tabId);
     } catch (error) {
       console.error('[Tabs] Failed to notify websocket of tab closure:', error);
+    }
+    
+    // Clean up overlay if it exists
+    if (tab.overlayView) {
+      try {
+        this.window.removeBrowserView(tab.overlayView);
+        (tab.overlayView.webContents as any).destroy();
+      } catch (error) {
+        console.error('[Tabs] Failed to destroy overlay:', error);
+      }
     }
     
     // Remove from window
@@ -260,13 +288,20 @@ export class TabsManager {
     const width = contentSize[0] || 1024;
     const height = contentSize[1] || 768;
     
-    // Account for toolbar + URL bar at top (no sidebar)
-    tab.view.setBounds({
+    const bounds = {
       x: 0,
       y: this.toolbarHeight + this.urlbarHeight,
       width: width,
       height: height - this.toolbarHeight - this.urlbarHeight
-    });
+    };
+    
+    // Layout main tab view
+    tab.view.setBounds(bounds);
+    
+    // Layout overlay view if it exists
+    if (tab.overlayView) {
+      tab.overlayView.setBounds(bounds);
+    }
   }
 
   /**
@@ -329,12 +364,132 @@ export class TabsManager {
   }
 
   /**
+   * Show overlay on a specific tab
+   * @param tabId - ID of the tab to show overlay on
+   */
+  showOverlay(tabId: number): void {
+    const tab = this.getTab(tabId);
+    
+    if (!tab) {
+      console.error('[Tabs] Cannot show overlay - tab not found:', tabId);
+      return;
+    }
+    
+    // Idempotent - if overlay already exists, do nothing
+    if (tab.overlayView) {
+      console.log('[Tabs] Overlay already visible for tab:', tabId);
+      return;
+    }
+    
+    const debugMode = getConfigValue('debugMode');
+    
+    if (debugMode) {
+      console.log('[Tabs] Creating overlay for tab:', tabId);
+    }
+    
+    // Create overlay BrowserView
+    const overlayView = new BrowserView({
+      webPreferences: {
+        contextIsolation: true,
+        nodeIntegration: false,
+        sandbox: true,
+        webSecurity: true,
+      }
+    });
+    
+    // Store in tab
+    tab.overlayView = overlayView;
+    
+    // Calculate bounds (same as main tab view)
+    const contentSize = this.window.getContentSize();
+    const width = contentSize[0] || 1024;
+    const height = contentSize[1] || 768;
+    
+    const bounds = {
+      x: 0,
+      y: this.toolbarHeight + this.urlbarHeight,
+      width: width,
+      height: height - this.toolbarHeight - this.urlbarHeight
+    };
+    
+    overlayView.setBounds(bounds);
+    
+    // Add to window on top
+    this.window.addBrowserView(overlayView);
+    this.window.setTopBrowserView(overlayView);
+    
+    // Load overlay HTML
+    const overlayPath = path.join(__dirname, '../renderer-overlay/index.html');
+    overlayView.webContents.loadFile(overlayPath).then(() => {
+      if (debugMode) {
+        console.log('[Tabs] Overlay loaded for tab:', tabId);
+      }
+    }).catch((error) => {
+      console.error('[Tabs] Failed to load overlay:', error);
+    });
+  }
+
+  /**
+   * Hide and destroy overlay on a specific tab
+   * @param tabId - ID of the tab to hide overlay on
+   */
+  hideOverlay(tabId: number): void {
+    const tab = this.getTab(tabId);
+    
+    if (!tab) {
+      console.error('[Tabs] Cannot hide overlay - tab not found:', tabId);
+      return;
+    }
+    
+    // Idempotent - if no overlay, do nothing
+    if (!tab.overlayView) {
+      return;
+    }
+    
+    const debugMode = getConfigValue('debugMode');
+    
+    if (debugMode) {
+      console.log('[Tabs] Destroying overlay for tab:', tabId);
+    }
+    
+    try {
+      // Remove from window
+      this.window.removeBrowserView(tab.overlayView);
+      
+      // Destroy webContents
+      (tab.overlayView.webContents as any).destroy();
+      
+      // Clear reference
+      tab.overlayView = undefined;
+      
+      if (debugMode) {
+        console.log('[Tabs] Overlay destroyed for tab:', tabId);
+      }
+    } catch (error) {
+      console.error('[Tabs] Failed to destroy overlay:', error);
+      // Still clear reference to prevent memory leak
+      tab.overlayView = undefined;
+    }
+  }
+
+  /**
    * Clean up all tabs
    */
   destroy(): void {
     console.log('[Tabs] Destroying all tabs');
     
     for (const tab of this.tabs) {
+      // Clean up overlay if exists
+      if (tab.overlayView) {
+        try {
+          this.window.removeBrowserView(tab.overlayView);
+          (tab.overlayView.webContents as any).destroy();
+        } catch (error) {
+          console.error('[Tabs] Failed to destroy overlay during cleanup:', error);
+        }
+      }
+      
+      // Clean up main view
       this.window.removeBrowserView(tab.view);
       (tab.view.webContents as any).destroy();
     }
