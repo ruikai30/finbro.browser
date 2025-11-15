@@ -8,6 +8,7 @@
 import WebSocket from 'ws';
 import { getConfigValue } from './config';
 import { getTabsManager } from './ipc';
+import { updateOverlayState, deleteOverlayState } from './overlay-state';
 
 let ws: WebSocket | null = null;
 let currentToken: string | null = null;
@@ -164,14 +165,32 @@ function handleAnimationMessage(message: any): void {
   if (action === 'in_progress') {
     tabStates.set(tab_id, 'in_progress');
     console.log('[WebSocket] ✨ In progress for tab:', tab_id);
+    
+    // Update overlay state and show overlay
+    updateOverlayState(tab_id, {
+      type: 'purple_glow',
+      visible: true
+    });
     tabsManager.showOverlay(tab_id);
   } else if (action === 'success') {
     tabStates.set(tab_id, 'success');
     console.log('[WebSocket] ✅ Success for tab:', tab_id);
+    
+    // Update overlay state and hide overlay
+    updateOverlayState(tab_id, {
+      type: null,
+      visible: false
+    });
     tabsManager.hideOverlay(tab_id);
   } else if (action === 'failed') {
     tabStates.set(tab_id, 'failed');
     console.log('[WebSocket] ❌ Failed for tab:', tab_id);
+    
+    // Update overlay state and hide overlay
+    updateOverlayState(tab_id, {
+      type: null,
+      visible: false
+    });
     tabsManager.hideOverlay(tab_id);
   } else {
     console.warn('[WebSocket] Unknown animation action:', action);
@@ -337,6 +356,7 @@ function sendError(id: string, error: string): void {
 export function onTabClosed(tabId: number): void {
   if (tabStates.has(tabId)) {
     tabStates.delete(tabId);
+    deleteOverlayState(tabId);
     console.log('[WebSocket] 🧹 Cleaned up state for closed tab:', tabId);
     
     // Notify renderer of state change

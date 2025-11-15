@@ -1,25 +1,36 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import path from 'path';
-import fs from 'fs';
+import { spawn } from 'child_process';
 
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [
     react(),
-    // Copy overlay HTML to dist after build
+    // Build overlay after main renderer build completes
     {
-      name: 'copy-overlay',
+      name: 'build-overlay',
       closeBundle() {
-        const overlaySource = path.join(__dirname, 'src/renderer-overlay/index.html');
-        const overlayDest = path.join(__dirname, 'dist/renderer-overlay');
+        console.log('Building overlay renderer...');
         
-        if (!fs.existsSync(overlayDest)) {
-          fs.mkdirSync(overlayDest, { recursive: true });
-        }
+        // Run vite build for overlay
+        const viteBuild = spawn('npx', [
+          'vite',
+          'build',
+          '--config',
+          'vite.overlay.config.ts'
+        ], {
+          stdio: 'inherit',
+          shell: true
+        });
         
-        fs.copyFileSync(overlaySource, path.join(overlayDest, 'index.html'));
-        console.log('✓ Copied overlay HTML to dist/renderer-overlay/');
+        viteBuild.on('close', (code) => {
+          if (code === 0) {
+            console.log('✓ Overlay build complete');
+          } else {
+            console.error('✗ Overlay build failed');
+          }
+        });
       }
     }
   ],

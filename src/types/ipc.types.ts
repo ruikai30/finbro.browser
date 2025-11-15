@@ -26,6 +26,9 @@ export enum IpcChannel {
   
   // Authentication
   AUTH_SEND_TOKEN = 'auth:send-token',
+  
+  // Overlay
+  OVERLAY_GET_STATE = 'overlay:get-state',
 }
 
 /**

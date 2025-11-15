@@ -10,6 +10,7 @@ import { IpcChannel } from '../types/ipc.types';
 import { TabsManager } from './tabs';
 import { getConfig, setConfig } from './config';
 import { handleAuthToken } from './auth';
+import { getOverlayState } from './overlay-state';
 
 // TabsManager instance (set by windows.ts)
 let tabsManager: TabsManager | null = null;
@@ -95,6 +96,9 @@ export function registerIpcHandlers(): void {
   
   // Animation States
   ipcMain.handle('animation:get-states', handleGetAnimationStates);
+  
+  // Overlay
+  ipcMain.handle(IpcChannel.OVERLAY_GET_STATE, handleOverlayGetState);
   
   console.log('[IPC] All handlers registered');
 }
@@ -223,5 +227,17 @@ async function handleAuthSendToken(
   console.log('[IPC] Token:', args.token ? 'Present' : 'NULL (logout)');
   console.log('='.repeat(60));
   handleAuthToken(args.token);
+}
+
+/**
+ * Overlay Handlers
+ */
+
+async function handleOverlayGetState(
+  event: IpcMainInvokeEvent,
+  args: { tabId: number }
+): Promise<{ state: any }> {
+  const state = getOverlayState(args.tabId);
+  return { state };
 }
 

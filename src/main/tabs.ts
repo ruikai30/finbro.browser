@@ -390,6 +390,7 @@ export class TabsManager {
     // Create overlay BrowserView
     const overlayView = new BrowserView({
       webPreferences: {
+        preload: path.join(__dirname, '../preload/preload-overlay.js'),
         contextIsolation: true,
         nodeIntegration: false,
         sandbox: true,
@@ -418,9 +419,11 @@ export class TabsManager {
     this.window.addBrowserView(overlayView);
     this.window.setTopBrowserView(overlayView);
     
-    // Load overlay HTML
+    // Load overlay HTML with tab ID as query parameter
     const overlayPath = path.join(__dirname, '../renderer-overlay/index.html');
-    overlayView.webContents.loadFile(overlayPath).then(() => {
+    overlayView.webContents.loadFile(overlayPath, {
+      search: `tabId=${tabId}`
+    }).then(() => {
       if (debugMode) {
         console.log('[Tabs] Overlay loaded for tab:', tabId);
       }
