@@ -169,9 +169,17 @@ function handleAnimationMessage(message: any): void {
     // Update overlay state and show overlay
     updateOverlayState(tab_id, {
       type: 'purple_glow',
-      visible: true
+      visible: true,
+      message: message.message
     });
     tabsManager.showOverlay(tab_id);
+  } else if (action === 'update') {
+    console.log('[WebSocket] 💬 Update message for tab:', tab_id);
+    
+    // Update message only (overlay already visible)
+    updateOverlayState(tab_id, {
+      message: message.message
+    });
   } else if (action === 'success') {
     tabStates.set(tab_id, 'success');
     console.log('[WebSocket] ✅ Success for tab:', tab_id);
@@ -179,7 +187,8 @@ function handleAnimationMessage(message: any): void {
     // Update overlay state and hide overlay
     updateOverlayState(tab_id, {
       type: null,
-      visible: false
+      visible: false,
+      message: undefined
     });
     tabsManager.hideOverlay(tab_id);
   } else if (action === 'failed') {
@@ -189,7 +198,8 @@ function handleAnimationMessage(message: any): void {
     // Update overlay state and hide overlay
     updateOverlayState(tab_id, {
       type: null,
-      visible: false
+      visible: false,
+      message: undefined
     });
     tabsManager.hideOverlay(tab_id);
   } else {
@@ -403,5 +413,3 @@ export function disconnectWebSocket(): void {
 export function isWebSocketConnected(): boolean {
   return ws !== null && ws.readyState === WebSocket.OPEN;
 }
-
-

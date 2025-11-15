@@ -52,4 +52,3 @@ function notifyOverlay(tabId: number, state: OverlayState): void {
     tab.overlayView.webContents.send('overlay:update', state);
   }
 }
-

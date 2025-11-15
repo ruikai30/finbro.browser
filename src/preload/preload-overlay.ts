@@ -45,4 +45,3 @@ contextBridge.exposeInMainWorld('OverlayAPI', overlayApi);
 
 // Type declaration for TypeScript in renderer
 export type OverlayAPI = typeof overlayApi;
-

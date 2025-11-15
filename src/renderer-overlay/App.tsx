@@ -7,6 +7,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { PurpleGlow } from './components/PurpleGlow';
+import { StreamingWidget } from './components/StreamingWidget';
 import type { OverlayState } from './types';
 
 export const App: React.FC = () => {
@@ -47,12 +48,11 @@ export const App: React.FC = () => {
     return null;
   }
 
-  // Route to appropriate overlay component based on type
-  switch (state.type) {
-    case 'purple_glow':
-      return <PurpleGlow />;
-    
-    default:
-      return null;
-  }
+  // Render overlay with optional streaming widget
+  return (
+    <>
+      <PurpleGlow />
+      {state.message && <StreamingWidget message={state.message} />}
+    </>
+  );
 };

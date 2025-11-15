@@ -10,6 +10,7 @@
 export interface OverlayState {
   type: 'purple_glow' | null;
   visible: boolean;
+  message?: string;
 }
 
 /**
@@ -22,4 +23,3 @@ export interface OverlayGetStateRequest {
 export interface OverlayGetStateResponse {
   state: OverlayState | null;
 }
-
