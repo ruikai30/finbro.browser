@@ -44,15 +44,22 @@ export const App: React.FC = () => {
   }, []);
 
   // Don't render anything if not visible or no state
-  if (!state || !state.visible) {
+  if (!state || !state.visible || tabId === null) {
     return null;
   }
+
+  const handleStopAgent = () => {
+    window.OverlayAPI.stopAgent(tabId);
+  };
 
   // Render overlay with optional streaming widget
   return (
     <>
       <PurpleGlow />
       {state.message && <StreamingWidget message={state.message} />}
+      <button className="stop-agent-button" onClick={handleStopAgent}>
+        ⊗ Stop Agent
+      </button>
     </>
   );
 };

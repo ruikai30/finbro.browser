@@ -99,6 +99,7 @@ export function registerIpcHandlers(): void {
   
   // Overlay
   ipcMain.handle(IpcChannel.OVERLAY_GET_STATE, handleOverlayGetState);
+  ipcMain.handle('overlay:stop-agent', handleOverlayStopAgent);
   
   console.log('[IPC] All handlers registered');
 }
@@ -239,5 +240,15 @@ async function handleOverlayGetState(
 ): Promise<{ state: any }> {
   const state = getOverlayState(args.tabId);
   return { state };
+}
+
+async function handleOverlayStopAgent(
+  event: IpcMainInvokeEvent,
+  args: { tabId: number }
+): Promise<void> {
+  console.log('[IPC] overlay:stop-agent - Tab:', args.tabId);
+  
+  const { sendStopAutomation } = await import('./websocket-client.js');
+  sendStopAutomation(args.tabId);
 }
 

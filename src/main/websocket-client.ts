@@ -413,3 +413,38 @@ export function disconnectWebSocket(): void {
 export function isWebSocketConnected(): boolean {
   return ws !== null && ws.readyState === WebSocket.OPEN;
 }
+
+/**
+ * Send stop automation request for a specific tab
+ * Immediately hides overlay without waiting for server response
+ */
+export function sendStopAutomation(tabId: number): void {
+  console.log('[WebSocket] 🛑 Stop automation requested for tab:', tabId);
+  
+  // Send stop message to server
+  if (ws && ws.readyState === WebSocket.OPEN) {
+    try {
+      ws.send(JSON.stringify({
+        type: 'stop_automation',
+        tab_id: tabId
+      }));
+      console.log('[WebSocket] 📤 Sent stop_automation message');
+    } catch (error) {
+      console.error('[WebSocket] Failed to send stop message:', error);
+    }
+  }
+  
+  // Immediately hide overlay (don't wait for server)
+  const tabsManager = getTabsManager();
+  if (tabsManager) {
+    tabsManager.hideOverlay(tabId);
+    console.log('[WebSocket] ✅ Overlay hidden for tab:', tabId);
+  }
+  
+  // Clear tab state
+  if (tabStates.has(tabId)) {
+    tabStates.delete(tabId);
+    getNotifyFunction()(new Map(tabStates));
+    console.log('[WebSocket] ✅ Tab state cleared');
+  }
+}

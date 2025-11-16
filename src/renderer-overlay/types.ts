@@ -14,6 +14,7 @@ declare global {
     OverlayAPI: {
       getState: (tabId: number) => Promise<OverlayState | null>;
       onUpdate: (callback: (state: OverlayState) => void) => () => void;
+      stopAgent: (tabId: number) => Promise<void>;
     };
   }
 }

@@ -37,6 +37,14 @@ const overlayApi = {
     return () => {
       ipcRenderer.removeListener('overlay:update', handler);
     };
+  },
+  
+  /**
+   * Stop agent automation for this tab
+   * @param tabId - Tab ID to stop automation for
+   */
+  stopAgent: async (tabId: number): Promise<void> => {
+    return await ipcRenderer.invoke('overlay:stop-agent', { tabId });
   }
 };
 
