@@ -9,6 +9,7 @@ import { app, BrowserWindow } from 'electron';
 import { createMainWindow } from './windows';
 import { registerIpcHandlers } from './ipc';
 import { getConfig } from './config';
+import { initFileSync } from './file-sync';
 
 console.log('='.repeat(60));
 console.log('finbro.me - Starting');
@@ -29,6 +30,9 @@ app.whenReady().then(async () => {
   const config = getConfig();
   console.log('[Main] Debug mode:', config.debugMode);
   console.log('[Main] Startup tabs:', config.startupTabs.length);
+  
+  // Initialize file sync
+  await initFileSync();
   
   // Register IPC handlers
   registerIpcHandlers();

@@ -9,6 +9,7 @@ import WebSocket from 'ws';
 import { getConfigValue } from './config';
 import { getTabsManager } from './ipc';
 import { updateOverlayState, deleteOverlayState } from './overlay-state';
+import * as FileSync from './file-sync';
 
 let ws: WebSocket | null = null;
 let currentToken: string | null = null;
@@ -59,6 +60,9 @@ export function connectWebSocket(token: string): void {
       
       ws!.send(JSON.stringify(registrationMsg));
       console.log('[WebSocket] 📤 Sent registration message');
+      
+      // Set WebSocket reference for file sync
+      FileSync.setWebSocket(ws!);
     });
     
     ws.on('message', (data: WebSocket.Data) => {
@@ -100,6 +104,9 @@ function handleServerMessage(message: any): void {
   if (message.type === 'registered') {
     console.log('[WebSocket] ✅ Registration confirmed');
     console.log('[WebSocket] User ID:', message.user_id);
+    
+    // Request file sync after registration
+    FileSync.requestFileSync();
     return;
   }
   
@@ -111,6 +118,24 @@ function handleServerMessage(message: any): void {
   // Handle errors from server
   if (message.type === 'error') {
     console.error('[WebSocket] Server error:', message.error);
+    return;
+  }
+  
+  // Handle file sync metadata
+  if (message.type === 'file_sync_metadata') {
+    FileSync.handleSyncMetadata(message.files);
+    return;
+  }
+  
+  // Handle signed URLs for file sync
+  if (message.type === 'signed_urls') {
+    FileSync.handleSignedUrls(message.files);
+    return;
+  }
+  
+  // Handle file sync acknowledgment
+  if (message.type === 'file_sync_acknowledged') {
+    console.log('[WebSocket] ✅ File sync acknowledged by server');
     return;
   }
   
