@@ -168,6 +168,10 @@ function handleServerMessage(message: any): void {
       executeCdpCommand(id, params);
       break;
     
+    case 'file_upload':
+      executeFileUpload(id, params);
+      break;
+    
     default:
       sendError(id, `Unknown action: ${action}`);
   }
@@ -351,6 +355,58 @@ async function executeCdpCommand(id: string, params: any): Promise<void> {
   } catch (error) {
     const errorMsg = error instanceof Error ? error.message : 'Unknown error';
     console.error('[WebSocket] ❌ CDP command failed:', errorMsg);
+    sendError(id, errorMsg);
+  }
+}
+
+async function executeFileUpload(id: string, params: any): Promise<void> {
+  const { tab_id, relative_path, cdp_method, cdp_args } = params;
+  
+  // Validate parameters
+  if (tab_id === undefined) {
+    sendError(id, 'Missing required parameter: tab_id');
+    return;
+  }
+  
+  if (!relative_path) {
+    sendError(id, 'Missing required parameter: relative_path');
+    return;
+  }
+  
+  if (!cdp_method) {
+    sendError(id, 'Missing required parameter: cdp_method');
+    return;
+  }
+  
+  console.log('[WebSocket] 📤 File upload request:', relative_path);
+  
+  try {
+    // Resolve relative path to absolute path
+    const absolutePath = FileSync.resolveFilePath(relative_path);
+    
+    if (!absolutePath) {
+      sendError(id, `File not found: ${relative_path}`);
+      return;
+    }
+    
+    console.log('[WebSocket] ✅ Resolved file path:', absolutePath);
+    
+    // Inject file path into CDP args
+    const fullArgs = {
+      ...cdp_args,
+      files: [absolutePath]
+    };
+    
+    // Execute CDP command with file path
+    await executeCdpCommand(id, {
+      tab_id,
+      method: cdp_method,
+      args: fullArgs
+    });
+    
+  } catch (error) {
+    const errorMsg = error instanceof Error ? error.message : 'Unknown error';
+    console.error('[WebSocket] ❌ File upload failed:', errorMsg);
     sendError(id, errorMsg);
   }
 }

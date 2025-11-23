@@ -180,6 +180,28 @@ export function getFilesDirectory(): string {
 }
 
 /**
+ * Resolve relative file path to absolute path
+ * @param relativePath - Relative path from files directory (e.g. "abc-123/resume.pdf")
+ * @returns Absolute path or null if file doesn't exist
+ */
+export function resolveFilePath(relativePath: string): string | null {
+  try {
+    const fullPath = path.join(FILES_DIR, relativePath);
+    
+    // Verify file exists
+    if (fs.existsSync(fullPath)) {
+      return fullPath;
+    }
+    
+    console.warn('[FileSync] File not found:', fullPath);
+    return null;
+  } catch (error) {
+    console.error('[FileSync] Error resolving file path:', error);
+    return null;
+  }
+}
+
+/**
  * Ensure directory structure exists
  */
 function ensureDirectories(): void {
